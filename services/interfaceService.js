@@ -1,17 +1,5 @@
 const os = require("node:os");
 const { execFile } = require("node:child_process");
-function getInterfaces() {
-    const interfaces = os.networkInterfaces();
-
-    return Object.entries(interfaces).map(([name, addresses]) => ({
-        name,
-        addresses,
-        mac,
-        status: addresses.some(address => !address.internal)
-            ? "UP"
-            : "UNKNOWN"
-    }));
-}
 
 async function getInterfaceByName(name) {
     const interfaces = await getInterfaceStatuses();
@@ -40,16 +28,18 @@ function getInterfaceStatuses() {
                             ipv4: item.addr_info
                                 .filter(ip => ip.family === "inet")
                                 .map(ip => ip.local),
-
+                            prefix: item.addr_info
+                                .filter(ip => ip.family === "inet")
+                                .map(ip => ip.prefixlen),
                             ipv6: item.addr_info
                                 .filter(ip => ip.family === "inet6")
                                 .map(ip => ip.local),
 
                             status: item.operstate.toLowerCase()
                         }))
-                        .sort((a, b) =>
-                            a.name.localeCompare(b.name)
-                        )
+                            .sort((a, b) =>
+                                a.name.localeCompare(b.name)
+                            )
                     );
                 } catch (error) {
                     reject(error);
@@ -104,5 +94,4 @@ module.exports = {
     getInterfaces,
     getInterfaceByName,
     getInterfaceStatuses,
-    getRoutingTable
 };

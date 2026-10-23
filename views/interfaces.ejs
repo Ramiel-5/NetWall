@@ -10,69 +10,73 @@
 
 <body>
     <%- include('partials/sidebar') %>
-	<div class="content">
-        <h1>Network Interfaces</h1>
+        <div class="content">
+            <h1>Network Interfaces</h1>
 
-        <% if (interfaces.length===0) { %>
-            <p>No network interfaces found.</p>
-            <% } else { %>
-                <button id="refresh-button" type="button" onclick="updateInterfaces()">
-                    Refresh
-                </button>
+            <% if (interfaces.length===0) { %>
+                <p>No network interfaces found.</p>
+                <% } else { %>
+                    <button id="refresh-button" type="button" onclick="updateInterfaces()">
+                        Refresh
+                    </button>
 
-                <p id="update-status">Waiting for update...</p>
-                <p id="interface-summary">Loading interface summary...</p>
-                <div class="filter-container">
-                    <label for="status-filter">Filter status:</label>
+                    <p id="update-status">Waiting for update...</p>
+                    <p id="interface-summary">Loading interface summary...</p>
+                    <div class="filter-container">
+                        <label for="status-filter">Filter status:</label>
 
-                    <select id="status-filter">
-                        <option value="ALL">All interfaces</option>
-                        <option value="UP">Up</option>
-			<option value="DOWN">Down</option>
-                        <option value="UNKNOWN">Unknown</option>
-                    </select>
-                    <label for="interface-search">Search:</label>
-                    <input type="text" id="interface-search" placeholder="Enter interface name...">
-                </div>
+                        <select id="status-filter">
+                            <option value="ALL">All interfaces</option>
+                            <option value="UP">Up</option>
+                            <option value="DOWN">Down</option>
+                            <option value="UNKNOWN">Unknown</option>
+                        </select>
+                        <label for="interface-search">Search:</label>
+                        <input type="text" id="interface-search" placeholder="Enter interface name...">
+                    </div>
 
-                <table border="1" cellpadding="10">
-                    <thead>
-                        <tr>
-                            <th>Name</th>
-                            <th>Ipv4</th>
-                            <th>Ipv6</th>
-                            <th>Status</th>
-                        </tr>
-                    </thead>
-                    <tbody id="interface-list">
-                        <tr id="no-results" style="display: none;">
-                            <td colspan="2">No matching interfaces found.</td>
-                        </tr>
-                        <% interfaces.forEach((item)=> { %>
-                            <tr data-interface="<%= item.name %>">
-                                <td>
-                                    <%= item.name %>
-                                </td>
-                                <td>
-                                    <%=item.ipv4.join()|| "N/A"%>
-                                </td>
-                                <td>
-                                    <%=item.ipv6.join()|| "N/A" %>
-                                </td>
-                                <td>
-
-                                    <span class="status <%= item.status %>">
-                                        <%= item.status %>
-                                    </span>
-
-                                </td>
+                    <table border="1" cellpadding="10">
+                        <thead>
+                            <tr>
+                                <th>Name</th>
+                                <th>Ipv4</th>
+                                <th>Prefix</th>
+                                <th>Ipv6</th>
+                                <th>Status</th>
                             </tr>
-                            <% }); %>
-                    </tbody>
-                </table>
-</div>
-                <% } %>
-                    <script src="/js/script.js" defer></script>
+                        </thead>
+                        <tbody id="interface-list">
+                            <tr id="no-results" style="display: none;">
+                                <td colspan="2">No matching interfaces found.</td>
+                            </tr>
+                            <% interfaces.forEach((item)=> { %>
+                                <tr data-interface="<%= item.name %>">
+                                    <td>
+                                        <%= item.name %>
+                                    </td>
+                                    <td>
+                                        <%=item.ipv4.join()|| "N/A" %>
+                                    </td>
+                                    <td>
+                                        <%= "/" +item.prefix%>
+                                    </td>
+                                    <td>
+                                        <%=item.ipv6.join()|| "N/A" %>
+                                    </td>
+                                    <td>
+
+                                        <span class="status <%= item.status %>">
+                                            <%= item.status %>
+                                        </span>
+
+                                    </td>
+                                </tr>
+                                <% }); %>
+                        </tbody>
+                    </table>
+        </div>
+        <% } %>
+            <script src="/js/script.js" defer></script>
 
 </body>
 
