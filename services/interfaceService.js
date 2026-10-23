@@ -66,32 +66,8 @@ function normalizeStatus(status) {
 
     return "UNKNOWN";
 }
-function getRoutingTable() {
-    return new Promise((resolve, reject) => {
-        execFile(
-            "powershell.exe",
-            [
-                "-NoProfile",
-                "-Command",
-                "Get-NetRoute -AddressFamily IPv4 | Select-Object InterfaceAlias, DestinationPrefix, NextHop, RouteMetric | ConvertTo-Json -Compress"
-            ],
-            (error, stdout) => {
-                if (error) {
-                    return reject(error);
-                }
 
-                try {
-                    const result = JSON.parse(stdout || "[]");
-                    resolve(Array.isArray(result) ? result : [result]);
-                } catch (error) {
-                    reject(error);
-                }
-            }
-        );
-    });
-}
 module.exports = {
-    getInterfaces,
     getInterfaceByName,
     getInterfaceStatuses,
 };
