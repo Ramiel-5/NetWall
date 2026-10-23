@@ -1,14 +1,24 @@
-const { execFile } = require('node:child_process');
-const { promisify } = require('node:util');
+//Definition
+const express = require("express");
+const app = express();
+const PORT = 3000;
+const dashboardRouter = require("./routes/dashboard");
+const routingRouter = require("./routes/routing");
+const interfacesRouter = require("./routes/interfaces");
 
-const execFileAsync = promisify(execFile);
+app.set("view engine", "ejs");
+app.set("views", "./views");
+app.use(express.static("src"));
+app.use("/", dashboardRouter);
+app.use("/routes", routingRouter);
+app.use("/interfaces", interfacesRouter);
+//Main
 
-async function getRuleset() {
-    const { stdout } = await execFileAsync(
-        '/usr/sbin/nft',
-        ['list', 'ruleset'],
-        { timeout: 5000 }
-    );
-    return stdout;
-}
-module.exports = { getRuleset };
+// app.get("/", (req, res) => {
+//     res.render("dashboard");
+// })
+
+
+app.listen(PORT, () => {
+    console.log(`Server running at http://localhost:${PORT}`);
+});

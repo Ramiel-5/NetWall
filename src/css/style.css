@@ -1,0 +1,238 @@
+
+* {
+    box-sizing: border-box;
+}
+
+body{
+    display: grid;
+    grid-template-columns: 250px auto;
+}
+.sidebar {
+    width: 250px;
+    height: 100vh;
+    position: fixed;
+    top: 0;
+    left: 0;
+    display: flex;
+    flex-direction: column;
+    background: #172338;
+    color: #e2e8f0;
+    font-family: Arial, sans-serif;
+    border-right: 1px solid #29374d;
+}
+
+.sidebar-brand {
+    height: 80px;
+    padding: 0 22px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    border-bottom: 1px solid #29374d;
+}
+
+.brand-icon {
+    width: 38px;
+    height: 38px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: #3478d4;
+    color: white;
+    font-size: 22px;
+    font-weight: bold;
+    border-radius: 9px;
+}
+
+.brand-info h2 {
+    margin: 0 0 5px;
+    font-size: 15px;
+    letter-spacing: 1px;
+}
+
+.brand-info span {
+    color: #91a0b7;
+    font-size: 11px;
+}
+
+.sidebar-section {
+    padding: 24px 22px 10px;
+    color: #8190a8;
+    font-size: 10px;
+    font-weight: bold;
+    letter-spacing: 1.3px;
+}
+
+.sidebar-nav {
+    display: flex;
+    flex-direction: column;
+    padding: 0 12px;
+}
+
+.sidebar-link {
+    display: flex;
+    align-items: center;
+    gap: 13px;
+    height: 44px;
+    padding: 0 12px;
+    margin-bottom: 4px;
+    border-radius: 6px;
+    color: #b8c4d6;
+    text-decoration: none;
+    font-size: 13px;
+    transition: background 0.2s, color 0.2s;
+}
+
+.sidebar-link:hover {
+    background: #25354d;
+    color: #ffffff;
+}
+
+.sidebar-link.active {
+    background: #2d65ad;
+    color: #ffffff;
+    font-weight: bold;
+}
+
+.menu-icon {
+    width: 20px;
+    text-align: center;
+    font-size: 19px;
+}
+
+.sidebar-bottom {
+    margin-top: auto;
+    padding: 16px 14px 12px;
+}
+
+.connection-status {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px 10px;
+    background: #202e43;
+    border: 1px solid #304057;
+    border-radius: 7px;
+}
+
+.status-dot {
+    width: 9px;
+    height: 9px;
+    flex-shrink: 0;
+    border-radius: 50%;
+    background: #8994a5;
+}
+
+.connection-status strong,
+.connection-status small {
+    display: block;
+}
+
+.connection-status strong {
+    font-size: 12px;
+    margin-bottom: 5px;
+}
+
+.connection-status small {
+    color: #9baac0;
+    font-size: 10px;
+}
+
+.sidebar-version {
+    margin-top: 15px;
+    color: #71819a;
+    font-size: 10px;
+    text-align: center;
+}
+table {
+    width: 100%;
+    border-collapse: collapse;
+    background: #ffffff;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+th,
+td {
+    padding: 14px 16px;
+    text-align: left;
+    border-bottom: 1px solid #e5eaf0;
+}
+
+th {
+    background: #1e2d43;
+    color: #ffffff;
+}
+
+tbody tr:hover {
+    background: #f0f5fb;
+}
+.status {
+    display: inline-block;
+    padding: 5px 10px;
+    border-radius: 12px;
+    font-size: 12px;
+    font-weight: bold;
+}
+
+.status.up {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.status.disconnected {
+    background: #fee2e2;
+    color: #991b1b;
+}
+
+.status.unknown {
+    background: #e5e7eb;
+    color: #374151;
+}
+#refresh-button {
+    padding: 10px 18px;
+    margin-bottom: 12px;
+    border: none;
+    border-radius: 6px;
+    background: #3567a8;
+    color: white;
+    font-weight: bold;
+    cursor: pointer;
+}
+
+#refresh-button:hover {
+    background: #284f85;
+}
+#interface-summary {
+    margin: 16px 0;
+    padding: 14px 18px;
+    background: #f1f5f9;
+    border-left: 4px solid #3567a8;
+    border-radius: 6px;
+    color: #1e293b;
+    font-size: 14px;
+    font-weight: 600;
+}
+.filter-container {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin: 16px 0;
+}
+
+.filter-container select {
+    padding: 8px 12px;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    background: white;
+    color: #1e293b;
+    cursor: pointer;
+}
+#update-status.connected {
+    color: #15803d;
+    font-weight: 600;
+}
+
+#update-status.connection-error {
+    color: #dc2626;
+    font-weight: 600;
+}

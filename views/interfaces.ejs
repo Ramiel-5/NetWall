@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="/css/style.css">
+    <title>Network Interfaces</title>
+</head>
+
+<body>
+    <%- include('partials/sidebar') %>
+        <h1>Network Interfaces</h1>
+
+        <% if (interfaces.length===0) { %>
+            <p>No network interfaces found.</p>
+            <% } else { %>
+                <button id="refresh-button" type="button" onclick="updateInterfaces()">
+                    Refresh
+                </button>
+
+                <p id="update-status">Waiting for update...</p>
+                <p id="interface-summary">Loading interface summary...</p>
+                <div class="filter-container">
+                    <label for="status-filter">Filter status:</label>
+
+                    <select id="status-filter">
+                        <option value="ALL">All interfaces</option>
+                        <option value="UP">UP</option>
+                        <option value="DISCONNECTED">Disconnected</option>
+                        <option value="UNKNOWN">Unknown</option>
+                    </select>
+                    <label for="interface-search">Search:</label>
+                    <input type="text" id="interface-search" placeholder="Enter interface name...">
+                </div>
+
+                <table border="1" cellpadding="10">
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Ipv4</th>
+                            <th>Ipv6</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="interface-list">
+                        <tr id="no-results" style="display: none;">
+                            <td colspan="2">No matching interfaces found.</td>
+                        </tr>
+                        <% interfaces.forEach((item)=> { %>
+                            <tr data-interface="<%= item.name %>">
+                                <td>
+                                    <%= item.name %>
+                                </td>
+                                <td>
+                                    <%=item.ipv4%>
+                                </td>
+                                <td>
+                                    <%=item.ipv6%>
+                                </td>
+                                <td>
+
+                                    <span class="status <%= item.status.toLowerCase() %>">
+                                        <%= item.status %>
+                                    </span>
+
+                                </td>
+                            </tr>
+                            <% }); %>
+                    </tbody>
+                </table>
+                <% } %>
+                    <script src="/js/interfaces.js" defer></script>
+
+</body>
+
+</html>

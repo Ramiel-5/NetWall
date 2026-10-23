@@ -1,0 +1,57 @@
+<aside class="sidebar">
+    <div class="sidebar-brand">
+        <div class="brand-icon">F</div>
+        <div class="brand-info">
+            <h2>FIREWALL</h2>
+            <span>Management System</span>
+        </div>
+    </div>
+
+    <div class="sidebar-section">MAIN MENU</div>
+
+    <nav class="sidebar-nav">
+        <a href="/" class="sidebar-link <%= activePage === 'dashboard' ? 'active' : '' %>">
+            <span class="menu-icon">▦</span>
+            <span>Dashboard</span>
+        </a>
+
+        <a href="/routing" class="sidebar-link <%= activePage === 'routing' ? 'active' : '' %>">
+            <span class="menu-icon">⇄</span>
+            <span>Routing</span>
+        </a>
+
+        <a href="/firewall" class="sidebar-link <%= activePage === 'firewall' ? 'active' : '' %>">
+            <span class="menu-icon">◈</span>
+            <span>Firewall Rules</span>
+        </a>
+
+        <a href="/interfaces" class="sidebar-link <%= activePage === 'interfaces' ? 'active' : '' %>">
+            <span class="menu-icon">⌘</span>
+            <span>Interfaces</span>
+        </a>
+
+        <div class="sidebar-section">MONITORING</div>
+
+        <a href="/logs" class="sidebar-link <%= activePage === 'logs' ? 'active' : '' %>">
+            <span class="menu-icon">≡</span>
+            <span>System Logs</span>
+        </a>
+
+        <a href="/diagnostics" class="sidebar-link <%= activePage === 'diagnostics' ? 'active' : '' %>">
+            <span class="menu-icon">⌁</span>
+            <span>Diagnostics</span>
+        </a>
+    </nav>
+
+    <div class="sidebar-bottom">
+        <div class="connection-status">
+            <span class="status-dot"></span>
+            <div>
+                <strong>Firewall Server</strong>
+                <small>Connection status: Unknown</small>
+            </div>
+        </div>
+
+        <div class="sidebar-version">Version 1.0.0 Alpha</div>
+    </div>
+</aside>
