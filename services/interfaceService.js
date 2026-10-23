@@ -20,33 +20,36 @@ async function getInterfaceByName(name) {
         item => item.name.toLowerCase() === name.toLowerCase()
     ) || null;
 }
-
 function getInterfaceStatuses() {
     return new Promise((resolve, reject) => {
         execFile(
-            "powershell.exe",
-            [
-                "-NoProfile",
-                "-Command",
-                "Get-NetAdapter  | Select-Object Name, Status | ConvertTo-Json -Compress"
-            ],
+            "ip",
+            ["-j", "address", "show"],
             (error, stdout) => {
                 if (error) {
                     return reject(error);
                 }
 
                 try {
-                    const result = JSON.parse(stdout);
+                    const interfaces = JSON.parse(stdout);
 
                     resolve(
-                        (Array.isArray(result) ? result : [result])
-                            .map(item => ({
-                                name: item.Name,
-                                ipv4: item.addresses,
-                                ipv6: item.mac,
-                                status: normalizeStatus(item.Status)
-                            }))
-                            .sort((a, b) => a.name.localeCompare(b.name))
+                        interfaces.map(item => ({
+                            name: item.ifname,
+
+                            ipv4: item.addr_info
+                                .filter(ip => ip.family === "inet")
+                                .map(ip => ip.local),
+
+                            ipv6: item.addr_info
+                                .filter(ip => ip.family === "inet6")
+                                .map(ip => ip.local),
+
+                            status: item.operstate.toLowerCase()
+                        }))
+                        .sort((a, b) =>
+                            a.name.localeCompare(b.name)
+                        )
                     );
                 } catch (error) {
                     reject(error);
@@ -55,6 +58,7 @@ function getInterfaceStatuses() {
         );
     });
 }
+
 function normalizeStatus(status) {
     if (!status) {
         return "UNKNOWN";
