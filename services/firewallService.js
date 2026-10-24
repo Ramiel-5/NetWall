@@ -69,7 +69,7 @@ async function addFirewallRule(data) {
     const { chain, protocol, action, port, source, destination } = data;
 
     const validChains = ["INPUT", "FORWARD", "OUTPUT"];
-    const validProtocols = ["tcp", "udp", "all"];
+    const validProtocols = ["tcp", "udp", "icmp", "all"];
     const validActions = ["ACCEPT", "DROP", "REJECT"];
 
     if (!validChains.includes(chain)) {
