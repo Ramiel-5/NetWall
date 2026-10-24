@@ -3,7 +3,7 @@ const { stdout } = require("process");
 
 function getFirewallRules() {
     return new Promise((resolve, reject) => {
-        const dir = getDir(iptables)
+        const dir = getDir("iptables")
         execFile(
             "sudo",
             [dir, "-S"],
