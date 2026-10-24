@@ -16,9 +16,9 @@ function getRoutingTable() {
                 ])
             );
         });
-        routes.Destination = hexToIPv4(route.Destination);
-        routes.Gateway = hexToIPv4(route.Gateway);
-        routes.Flags = hexToFlags(route.Flags);
+        routes.Destination = hexToIPv4(routes.Destination);
+        routes.Gateway = hexToIPv4(routes.Gateway);
+        routes.Flags = hexToFlags(routes.Flags);
 
 
         return routes;
