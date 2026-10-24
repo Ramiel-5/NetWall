@@ -18,6 +18,7 @@ app.use("/interfaces", interfacesRouter);
 app.use("/logs", logRouter);
 app.use("/firewall", firewallRouter);
 app.use("/diagnostics", diagnosticsRouter);
+app.use(express.urlencoded({ extended: false }));
 app.listen(PORT, () => {
     console.log(`Server running at http://localhost:${PORT}`);
 });

@@ -8,9 +8,44 @@
 <body>
     <%- include('partials/sidebar') %>
         <div class="content">
+            <form action="/firewall/add" method="POST">
+                <label>Chain</label>
+                <select name="chain" required>
+                    <option value="INPUT">INPUT</option>
+                    <option value="FORWARD">FORWARD</option>
+                    <option value="OUTPUT">OUTPUT</option>
+                </select>
+
+                <label>Protocol</label>
+                <select name="protocol" required>
+                    <option value="tcp">TCP</option>
+                    <option value="udp">UDP</option>
+                    <option value="all">ALL</option>
+                </select>
+
+                <label>Action</label>
+                <select name="action" required>
+                    <option value="ACCEPT">ACCEPT</option>
+                    <option value="DROP">DROP</option>
+                    <option value="REJECT">REJECT</option>
+                </select>
+
+                <label>Port</label>
+                <input type="number" name="port" min="1" max="65535" placeholder="Leave empty for any port">
+
+                <label>Source</label>
+                <input type="text" name="source" placeholder="e.g. 192.168.1.0/24">
+
+                <label>Destination</label>
+                <input type="text" name="destination" placeholder="e.g. 192.168.2.10">
+
+                <button type="submit">Add Rule</button>
+            </form>
+
             <table>
                 <thead>
                     <tr>
+                        <th>Index</th>
                         <th>Chain</th>
                         <th>Protocol</th>
                         <th>Action</th>
@@ -20,28 +55,36 @@
                     </tr>
                 </thead>
                 <tbody>
-                    <% rules.forEach(rule=> { %>
+                    <% if (rules.length===0) { %>
                         <tr>
-                            <td>
-                                <%= rule.chain %>
-                            </td>
-                            <td>
-                                <%= rule.protocol %>
-                            </td>
-                            <td>
-                                <%= rule.action %>
-                            </td>
-                            <td>
-                                <%= rule.port %>
-                            </td>
-                            <td>
-                                <%= rule.source %>
-                            </td>
-                            <td>
-                                <%= rule.destination %>
-                            </td>
+                            <td colspan="7">No firewall rules found.</td>
                         </tr>
-                        <% }); %>
+                        <% } else { %>
+                            <% rules.forEach(rule=> { %>
+                                <tr>
+                                    <td>
+                                        <%= index + 1 %>
+                                    </td>
+                                    <td>
+                                        <%= rule.chain %>
+                                    </td>
+                                    <td>
+                                        <%= rule.protocol %>
+                                    </td>
+                                    <td>
+                                        <%= rule.action %>
+                                    </td>
+                                    <td>
+                                        <%= rule.port %>
+                                    </td>
+                                    <td>
+                                        <%= rule.source %>
+                                    </td>
+                                    <td>
+                                        <%= rule.destination %>
+                                    </td>
+                                </tr>
+                                <% }); %>
                 </tbody>
             </table>
         </div>
