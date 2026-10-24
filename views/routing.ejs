@@ -14,30 +14,32 @@
         <button id="refresh-button" type="button" onclick="loadRoutes()">
             Refresh
         </button>
-
         <p id="update-status" role="status" aria-live="polite">
             Loading routes...
         </p>
-        <p id="filter-status">Showing all routes</p>
-        <input type="text" id="route-search" placeholder="Search interface, destination, next hop...">
-        <button id="clear-search" type="button">Clear</button>
         <table>
             <thead>
                 <tr>
                     <th>
-                        <select id="interface-filter">
-                            <option value="">All Interfaces</option>
-                        </select>
+                        Interface
                     </th>
                     <th>
                         Destination
-                        <button id="sort-destination" type="button">Sort</button>
                     </th>
-                    <th>Next Hop</th>
+                    <th>Gateway</th>
+                    <th>
+                        Flags
+                    </th>
+                    <th>
+                        Use
+                    </th>
                     <th>
                         Metric
-                        <button id="sort-metric" type="button">Sort</button>
                     </th>
+                    <th>
+                        Mtu
+                    </th>
+
                 </tr>
             </thead>
             <tbody id="route-list">
@@ -45,22 +47,31 @@
                 <% routes.forEach(route=> { %>
                     <tr>
                         <td>
-                            <%= route.InterfaceAlias %>
+                            <%= route.Iface %>
                         </td>
                         <td>
-                            <%= route.DestinationPrefix %>
+                            <%= route.Destination %>
                         </td>
                         <td>
-                            <%= route.NextHop %>
+                            <%= route.Gateway %>
                         </td>
                         <td>
-                            <%= route.RouteMetric %>
+                            <%= route.Flags %>
+                        </td>
+                        <td>
+                            <%= route.Use %>
+                        </td>
+                        <td>
+                            <%= route.Metric %>
+                        </td>
+                        <td>
+                            <%= route.MTU %>
                         </td>
                     </tr>
                     <% }); %>
             </tbody>
         </table>
-        <script src="/js/routing.js" defer></script>
+        <!-- <script src="/js/routing.js" defer></script> -->
 </body>
 
 </html>

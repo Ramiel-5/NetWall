@@ -13,7 +13,7 @@ app.set("view engine", "ejs");
 app.set("views", "./views");
 app.use(express.static("src"));
 app.use("/", dashboardRouter);
-app.use("/routes", routingRouter);
+app.use("/routing", routingRouter);
 app.use("/interfaces", interfacesRouter);
 app.use("/logs", logRouter);
 app.use("/firewall", firewallRouter);
