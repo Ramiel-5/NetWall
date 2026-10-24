@@ -6,22 +6,22 @@ function getRoutingTable() {
         const rows = table.trim().split("\n");
         const headers = rows[0].trim().split(/\s+/);
 
-        const routes = rows.slice(1).map(row => {
-            const values = row.trim().split(/\s+/);
+        const routes = row.slice(1).map(line => {
+            const values = line.trim().split(/\s+/);
 
-            return Object.fromEntries(
+            const route = Object.fromEntries(
                 headers.map((header, index) => [
                     header,
                     values[index]
                 ])
             );
+
+            route.Destination = hexToIPv4(route.Destination);
+            route.Gateway = hexToIPv4(route.Gateway);
+            route.Flags = hexToFlags(route.Flags);
+
+            return route;
         });
-        routes.Destination = hexToIPv4(routes.Destination);
-        routes.Gateway = hexToIPv4(routes.Gateway);
-        routes.Flags = hexToFlags(routes.Flags);
-
-
-        return routes;
     } catch (err) {
         console.error("Error reading routing table:", err);
         throw err;
