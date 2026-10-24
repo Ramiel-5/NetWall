@@ -40,7 +40,7 @@ function hexToFlags(hex) {
 
     return result || "-";
 }
-function hexToIpv4(hex) {
+function hexToIPv4(hex) {
     const value = hex.match(/../g);
 
     return value
