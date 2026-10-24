@@ -48,13 +48,14 @@ function parseFirewallRules(rawRules) {
                         return args[i + 1] ?? null;
                     }
                 }
-                const comment = (getValue("--comment") || "")
-                    .replace(/^["']|["']$/g, "");
-
-                const managed = comment.startsWith("webfw:");
 
                 return null;
+
             };
+            const comment = (getValue("--comment") || "")
+                .replace(/^["']|["']$/g, "");
+
+            const managed = comment.startsWith("webfw:");
             const rawRule = line;
 
             return {
