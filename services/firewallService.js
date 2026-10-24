@@ -2,8 +2,8 @@ const { execFile } = require("child_process");
 const { stdout } = require("process");
 
 function getFirewallRules() {
-    return new Promise((resolve, reject) => {
-        const dir = getDir("iptables")
+    return new Promise(async (resolve, reject) => {
+        const dir = await getDir("iptables")
         execFile(
             "sudo",
             [dir, "-S"],
