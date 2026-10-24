@@ -12,13 +12,14 @@ const logRouter = require("./routes/logs");
 app.set("view engine", "ejs");
 app.set("views", "./views");
 app.use(express.static("src"));
+app.use(express.urlencoded({ extended: false }));
 app.use("/", dashboardRouter);
 app.use("/routing", routingRouter);
 app.use("/interfaces", interfacesRouter);
 app.use("/logs", logRouter);
 app.use("/firewall", firewallRouter);
 app.use("/diagnostics", diagnosticsRouter);
-app.use(express.urlencoded({ extended: false }));
+
 app.listen(PORT, () => {
     console.log(`Server running at http://localhost:${PORT}`);
 });
