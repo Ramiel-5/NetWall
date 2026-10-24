@@ -1,6 +1,5 @@
-const crypto = require("crypto");
+
 const { execFile } = require("child_process");
-const { stdout } = require("process");
 
 
 function getFirewallRules() {
@@ -141,9 +140,27 @@ async function addFirewallRule(data) {
     });
 
 }
+function deleteFirewallRule(id) {
+    return new Promise((resolve, reject) => {
+        execFile(
+            "sudo",
+            ["-n", "/usr/local/sbin/firewall-rule-delete", id],
+            (error, stdout, stderr) => {
+                if (error) {
+                    return reject(
+                        new Error(stderr.trim() || error.message)
+                    );
+                }
+
+                resolve(stdout.trim());
+            }
+        );
+    });
+}
 
 module.exports = {
     getFirewallRules,
     parseFirewallRules,
-    addFirewallRule
+    addFirewallRule,
+    deleteFirewallRule
 };
