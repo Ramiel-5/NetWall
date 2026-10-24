@@ -15,6 +15,7 @@ router.get("/", async (req, res) => {
             rules,
             activePage: "firewall"
         });
+        console.log(rules);
     } catch (error) {
         console.error(error);
         res.status(500).send("Failed to load firewall rules");

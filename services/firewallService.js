@@ -6,7 +6,7 @@ function getFirewallRules() {
         const dir = await getDir("iptables")
         execFile(
             "sudo",
-            [dir, "-S"],
+            ["-n", dir, "-S"],
             (error, stdout, stderr) => {
                 if (error) {
                     return reject(error);
