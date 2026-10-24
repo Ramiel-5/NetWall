@@ -16,6 +16,7 @@ function getRoutingTable() {
 
     } catch (err) {
         console.error("Error reading file:", err);
+	throw err;
     }
 }
 

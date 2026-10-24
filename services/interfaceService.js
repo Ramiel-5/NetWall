@@ -1,7 +1,7 @@
 const os = require('node:os');
 const { execFile } = require('node:child_process');
 
-function getInterfaceStatuses() {
+function getInterfaceStatus() {
     return new Promise((resolve, reject) => {
         execFile(
             "ip",
@@ -43,4 +43,4 @@ function getInterfaceStatuses() {
 }
 
 
-module.exports = getInterfaceStatuses;
+module.exports = getInterfaceStatus;

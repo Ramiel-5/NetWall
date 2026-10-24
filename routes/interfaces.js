@@ -1,9 +1,9 @@
 const express = require("express");
 const router = express.Router();
-const interfaceService = require("../services/interfaceService");
+const getInterfaceStatus = require("../services/interfaceService");
 router.get("/",async (req, res) => {
 	try{
-		const interfaces = await interfaceService.getInterfaceStatuses();
+		const interfaces = await getInterfaceStatus();
         	res.render("interfaces", {
 			interfaces,
             		activePage: "interfaces"
@@ -18,7 +18,7 @@ router.get("/",async (req, res) => {
 });
 router.get("/data",async (req, res) => {
 	try{
-		const data = await interfaceService.getInterfaceStatuses();
+		const data = await interfaceService.getInterfaceStatus();
         	res.json(data);       	
 	}catch (error) {
         	console.error("Failed to get interface statuses:", error.message);

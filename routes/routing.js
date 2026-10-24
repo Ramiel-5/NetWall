@@ -1,9 +1,9 @@
 const express = require("express");
 const router = express.Router();
-const interfaceService = require("../services/routingService");
+const getRoutingTable = require("../services/routingService");
 router.get("/", async (req, res) => {
     try {
-        const routes = await routingService.getRoutingTable();
+        const routes = await getRoutingTable();
         res.render("routing", {
             routes,
             activePage: "routing"
@@ -18,7 +18,7 @@ router.get("/", async (req, res) => {
 });
 router.get("/data", async (req, res) => {
     try {
-        const data = await interfaceService.getRoutingTable();
+        const data = await getRoutingTable();
         res.json(data);
     } catch (error) {
         console.error("Failed to get routing table:", error.message);
