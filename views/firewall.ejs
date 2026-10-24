@@ -84,10 +84,14 @@
                                         <%= rule.destination %>
                                     </td>
                                     <td>
-                                        <% if (rule.managed) { %>
-                                            <button type="button" class="btn-delete" data-id="<%= rule.id %>">
-                                                Delete
-                                            </button>
+                                        <% if (rule.managed && rule.id) { %>
+                                            <form action="/firewall/delete" method="POST">
+                                                <input type="hidden" name="id" value="<%= rule.id %>">
+
+                                                <button type="submit" onclick="return confirm('Delete this rule?')">
+                                                    Delete
+                                                </button>
+                                            </form>
                                             <% } else { %>
                                                 <span>Not managed</span>
                                                 <% } %>
