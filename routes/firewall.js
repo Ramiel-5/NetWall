@@ -58,6 +58,7 @@ router.post("/delete", async (req, res) => {
 
         res.redirect("/firewall");
     } catch (error) {
+        console.error("Delete error:", error);
         console.error("Failed to delete firewall rule:", error.message);
         res.status(400).send("Failed to delete firewall rule");
     }
