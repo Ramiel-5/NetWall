@@ -25,6 +25,8 @@ router.get("/", async (req, res) => {
 
 router.post("/add", async (req, res) => {
     try {
+        console.log("Request body:", req.body);
+        console.log("Content-Type:", req.headers["content-type"])
         await addFirewallRule({
             chain: req.body.chain,
             protocol: req.body.protocol,
