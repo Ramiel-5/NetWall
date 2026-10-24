@@ -22,6 +22,7 @@ function getRoutingTable() {
 
             return route;
         });
+        return routes;
     } catch (err) {
         console.error("Error reading routing table:", err);
         throw err;

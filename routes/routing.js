@@ -4,8 +4,6 @@ const getRoutingTable = require("../services/routingService");
 router.get("/", async (req, res) => {
     try {
         const routes = await getRoutingTable();
-        console.log("Is array:", Array.isArray(routes));
-        console.log("Data:", routes);
         res.render("routing", {
             routes,
             activePage: "routing"
