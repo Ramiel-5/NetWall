@@ -1,125 +1,90 @@
 
-let isUpdating = false;
-async function updateInterfaces() {
-    if (isUpdating) return;
+// let isUpdating = false;
+// async function updateRoutingTable() {
+//     if (isUpdating) return;
 
-    isUpdating = true;
-    const refreshButton = document.getElementById("refresh-button");
-    refreshButton.disabled = true;
-    refreshButton.textContent = "Refreshing...";
-    try {
-        const response = await fetch("/routing/data");
+//     isUpdating = true;
+//     const refreshButton = document.getElementById("refresh-button");
+//     refreshButton.disabled = true;
+//     refreshButton.textContent = "Refreshing...";
+//     try {
+//         const response = await fetch("/routing/data");
 
-        if (!response.ok) {
-            throw new Error("Failed to fetch interfaces");
-        }
+//         if (!response.ok) {
+//             throw new Error("Failed to fetch ");
+//         }
 
-        const interfaces = await response.json();
-        const total = interfaces.length;
+//         const table = await response.json();
+//         const total = table.length;
 
-        const upCount = interfaces.filter(
-            item => item.status.toUpperCase() === "UP"
-        ).length;
+       
+//         const tbody = document.getElementById("route-list");
+//         const statusText = document.getElementById("update-status");
+//         statusText.textContent = "Updating...";
+//         const currentRows = new Map(
+//             [...tbody.querySelectorAll("tr[data-routing]")].map(row => [
+//                 row.dataset.route,
+//                 row
+//             ])
+//         );
+//         statusText.textContent =
+//             `Connected · Last updated: ${new Date().toLocaleTimeString()}`;
+//         statusText.className = "connected";
+//         filterInterfaces();
+//         interfaces.forEach(item => {
+//             let row = currentRows.get(route.Iface);
 
-        const summary = document.getElementById("interface-summary");
+//             if (!row) {
+//                 row = document.createElement("tr");
+//                 row.dataset.route = route.Iface;
 
-        summary.textContent = `Total interfaces: ${total} | UP: ${upCount} | Not UP: ${total - upCount}`;
-        const tbody = document.getElementById("interface-list");
-        const statusText = document.getElementById("update-status");
-        statusText.textContent = "Updating...";
-        const currentRows = new Map(
-            [...tbody.querySelectorAll("tr[data-interface]")].map(row => [
-                row.dataset.interface,
-                row
-            ])
-        );
-        statusText.textContent =
-            `Connected · Last updated: ${new Date().toLocaleTimeString()}`;
-        statusText.className = "connected";
-        filterInterfaces();
-        interfaces.forEach(item => {
-            let row = currentRows.get(item.name);
+//                 const nameCell = document.createElement("td");
+//                 nameCell.textContent = route.Iface;
 
-            if (!row) {
-                row = document.createElement("tr");
-                row.dataset.interface = item.name;
+//                 const statusCell = document.createElement("td");
+//                 const statusElement = document.createElement("span");
+//                 statusElement.className = "status";
 
-                const nameCell = document.createElement("td");
-                nameCell.textContent = item.name;
+//                 statusCell.appendChild(statusElement);
+//                 row.append(nameCell, statusCell);
+//                 tbody.appendChild(row);
+//             }
 
-                const statusCell = document.createElement("td");
-                const statusElement = document.createElement("span");
-                statusElement.className = "status";
+//             const statusElement = row.querySelector(".status");
+//             statusElement.textContent = item.status;
+//             statusElement.className =
+//                 "status " + item.status.toLowerCase();
 
-                statusCell.appendChild(statusElement);
-                row.append(nameCell, statusCell);
-                tbody.appendChild(row);
-            }
+//             currentRows.delete(route.Iface);
+//         });
 
-            const statusElement = row.querySelector(".status");
-            statusElement.textContent = item.status;
-            statusElement.className =
-                "status " + item.status.toLowerCase();
+//         currentRows.forEach(row => row.remove());
 
-            currentRows.delete(item.name);
-        });
+//     } catch (error) {
 
-        currentRows.forEach(row => row.remove());
+//         console.error("Failed to update interfaces:", error);
 
-    } catch (error) {
+//         const statusText = document.getElementById("update-status");
+//         statusText.textContent = "Connection error · Failed to update";
+//         statusText.className = "connection-error";
+//     }
 
-        console.error("Failed to update interfaces:", error);
+//     finally {
 
-        const statusText = document.getElementById("update-status");
-        statusText.textContent = "Connection error · Failed to update";
-        statusText.className = "connection-error";
-    }
+//         isUpdating = false;
+//         refreshButton.disabled = false;
+//         refreshButton.textContent = "Refresh";
 
-    finally {
+//     }
+// }
 
-        isUpdating = false;
-        refreshButton.disabled = false;
-        refreshButton.textContent = "Refresh";
 
-    }
-}
+// updateInterfaces();
+// setInterval(updateInterfaces, 10000);
 
-function filterInterfaces() {
-    const selectedStatus = document.getElementById("status-filter").value;
-    const searchText = document
-        .getElementById("interface-search")
-        .value.trim()
-        .toLowerCase();
-    const rows = document.querySelectorAll("#interface-list tr[data-interface]");
+// document.getElementById("status-filter")
+//     .addEventListener("change", filterInterfaces);
 
-    rows.forEach(row => {
-        const status = row.querySelector(".status")
-            .textContent.trim().toUpperCase();
-
-        const name = row.dataset.interface.toLowerCase();
-
-        const matchesStatus =
-            selectedStatus === "ALL" || status === selectedStatus;
-
-        const matchesName = name.includes(searchText);
-
-        row.style.display =
-            matchesStatus && matchesName ? "" : "none";
-    });
-    const visibleRows = [...rows].filter(
-        row => row.style.display !== "none"
-    );
-
-    const noResults = document.getElementById("no-results");
-
-    noResults.style.display = visibleRows.length === 0 ? "" : "none";
-}
-updateInterfaces();
-setInterval(updateInterfaces, 10000);
-
-document.getElementById("status-filter")
-    .addEventListener("change", filterInterfaces);
-
-document
-    .getElementById("interface-search")
-    .addEventListener("input", filterInterfaces);
+// document
+//     .getElementById("interface-search")
+//     .addEventListener("input", filterInterfaces);

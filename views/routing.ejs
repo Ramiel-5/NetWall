@@ -10,69 +10,69 @@
 
 <body>
     <%- include('partials/sidebar') %>
-    <div class="content">
-	<h1>Routing Table</h1>
-        <button id="refresh-button" type="button" onclick="loadRoutes()">
-            Refresh
-        </button>
-        <p id="update-status" role="status" aria-live="polite">
-            Loading routes...
-        </p>
-        <table>
-            <thead>
-                <tr>
-                    <th>
-                        Interface
-                    </th>
-                    <th>
-                        Destination
-                    </th>
-                    <th>Gateway</th>
-                    <th>
-                        Flags
-                    </th>
-                    <th>
-                        Use
-                    </th>
-                    <th>
-                        Metric
-                    </th>
-                    <th>
-                        Mtu
-                    </th>
-
-                </tr>
-            </thead>
-            <tbody id="route-list">
-
-                <% routes.forEach(route=> { %>
+        <div class="content">
+            <h1>Routing Table</h1>
+            <button id="refresh-button" type="button" onclick="loadRoutes()">
+                Refresh
+            </button>
+            <p id="update-status" role="status" aria-live="polite">
+                Loading routes...
+            </p>
+            <table border="1" cellpadding="10">
+                <thead>
                     <tr>
-                        <td>
-                            <%= route.Iface %>
-                        </td>
-                        <td>
-                            <%= route.Destination %>
-                        </td>
-                        <td>
-                            <%= route.Gateway %>
-                        </td>
-                        <td>
-                            <%= route.Flags %>
-                        </td>
-                        <td>
-                            <%= route.Use %>
-                        </td>
-                        <td>
-                            <%= route.Metric %>
-                        </td>
-                        <td>
-                            <%= route.MTU %>
-                        </td>
+                        <th>
+                            Interface
+                        </th>
+                        <th>
+                            Destination
+                        </th>
+                        <th>Gateway</th>
+                        <th>
+                            Flags
+                        </th>
+                        <th>
+                            Use
+                        </th>
+                        <th>
+                            Metric
+                        </th>
+                        <th>
+                            Mtu
+                        </th>
+
                     </tr>
-                    <% }); %>
-            </tbody>
-        </table>
-	</div>
+                </thead>
+                <tbody id="route-list">
+
+                    <% routes.forEach(route=> { %>
+                        <tr>
+                            <td>
+                                <%= route.Iface %>
+                            </td>
+                            <td>
+                                <%= route.Destination %>
+                            </td>
+                            <td>
+                                <%= route.Gateway %>
+                            </td>
+                            <td>
+                                <%= route.Flags %>
+                            </td>
+                            <td>
+                                <%= route.Use %>
+                            </td>
+                            <td>
+                                <%= route.Metric %>
+                            </td>
+                            <td>
+                                <%= route.MTU %>
+                            </td>
+                        </tr>
+                        <% }); %>
+                </tbody>
+            </table>
+        </div>
         <!-- <script src="/js/routing.js" defer></script> -->
 </body>
 
