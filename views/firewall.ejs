@@ -9,24 +9,46 @@
     <%- include('partials/sidebar') %>
         <div class="content">
             <table>
-                <th>
-                    Protocol
-                </th>
-                <th>
-                    Action
-                </th>
-                <th>
-                    Port
-                </th>
-                <th>
-                    Gateway
-                </th>
-                <th>
-                    Source
-                </th>
-                <th>
-                    Destination
-                </th>
+                <thead>
+                    <tr>
+                        <th>
+                            Protocol
+                        </th>
+                        <th>
+                            Action
+                        </th>
+                        <th>
+                            Port
+                        </th>
+                        <th>
+                            Source
+                        </th>
+                        <th>
+                            Destination
+                        </th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% rules.forEach(rule=> { %>
+                        <tr>
+                            <td>
+                                <%= rule.protocol %>
+                            </td>
+                            <td>
+                                <%= rule.action %>
+                            </td>
+                            <td>
+                                <%= rule.port %>
+                            </td>
+                            <td>
+                                <%= rule.source %>
+                            </td>
+                            <td>
+                                <%= rule.destination %>
+                            </td>
+                        </tr>
+                        <% }); %>
+                </tbody>
             </table>
         </div>
 

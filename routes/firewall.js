@@ -1,12 +1,21 @@
 const express = require("express");
 const router = express.Router();
-const getFirewallRules = require("../services/firewallService");
+
+const {
+    getFirewallRules,
+    parseFirewallRules
+} = require("../services/firewallService");
+
 router.get("/", async (req, res) => {
-    const rules = await getFirewallRules();
-    res.render("firewall", {
-        rules,
-        activePage: "firewall"
-    });
-    console.log(rules);
+    try {
+        const rawRules = await getFirewallRules();
+        const rules = parseFirewallRules(rawRules);
+
+        res.render("firewall", { rules });
+    } catch (error) {
+        console.error(error);
+        res.status(500).send("Failed to load firewall rules");
+    }
 });
+
 module.exports = router;
