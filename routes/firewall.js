@@ -44,6 +44,7 @@ router.post("/add", async (req, res) => {
     }
 });
 router.post("/delete", async (req, res) => {
+    console.log("DELETE ROUTE CALLED", req.body);
     try {
         const { id } = req.body;
 
