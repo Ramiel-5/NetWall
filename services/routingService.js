@@ -6,7 +6,7 @@ function getRoutingTable() {
         const rows = table.trim().split("\n");
         const headers = rows[0].trim().split(/\s+/);
 
-        const routes = row.slice(1).map(line => {
+        const routes = rows.slice(1).map(line => {
             const values = line.trim().split(/\s+/);
 
             const route = Object.fromEntries(
