@@ -1,5 +1,7 @@
+const crypto = require("crypto");
 const { execFile } = require("child_process");
 const { stdout } = require("process");
+
 
 function getFirewallRules() {
     return new Promise(async (resolve, reject) => {
@@ -46,18 +48,25 @@ function parseFirewallRules(rawRules) {
                         return args[i + 1] ?? null;
                     }
                 }
+                const comment = (getValue("--comment") || "")
+                    .replace(/^["']|["']$/g, "");
+
+                const managed = comment.startsWith("webfw:");
 
                 return null;
             };
+            const rawRule = line;
 
             return {
+                id: managed ? comment.slice("webfw:".length) : null,
+                managed,
                 chain: args[1],
                 protocol: getValue("-p", "--protocol") || "all",
                 action: getValue("-j", "--jump") || "UNKNOWN",
                 port: getValue("--dport", "--dports", "--port") || "any",
                 source: getValue("-s", "--source") || "any",
                 destination: getValue("-d", "--destination") || "any",
-                rawRule: line
+                rawRule
             };
         });
 }

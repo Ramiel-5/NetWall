@@ -38,7 +38,7 @@
                 <input type="text" name="source" placeholder="e.g. 192.168.1.0/24">
 
                 <label>Destination</label>
-                <input type="text" name="destination" placeholder="e.g. 192.168.2.10">
+                <input type="text" name="destination" placeholder="e.g. 192.168.2.0/24">
 
                 <button type="submit">Add Rule</button>
             </form>
@@ -53,12 +53,13 @@
                         <th>Port</th>
                         <th>Source</th>
                         <th>Destination</th>
+                        <th>Manage</th>
                     </tr>
                 </thead>
                 <tbody>
                     <% if (rules.length===0) { %>
                         <tr>
-                            <td colspan="7">No firewall rules found.</td>
+                            <td colspan="8">No firewall rules found.</td>
                         </tr>
                         <% } else %>
                             <% rules.forEach(rule=> { %>
@@ -81,6 +82,15 @@
                                     </td>
                                     <td>
                                         <%= rule.destination %>
+                                    </td>
+                                    <td>
+                                        <% if (rule.managed) { %>
+                                            <button type="button" class="btn-delete" data-id="<%= rule.id %>">
+                                                Delete
+                                            </button>
+                                            <% } else { %>
+                                                <span>Not managed</span>
+                                                <% } %>
                                     </td>
                                 </tr>
                                 <% }); %>
