@@ -11,26 +11,20 @@
             <table>
                 <thead>
                     <tr>
-                        <th>
-                            Protocol
-                        </th>
-                        <th>
-                            Action
-                        </th>
-                        <th>
-                            Port
-                        </th>
-                        <th>
-                            Source
-                        </th>
-                        <th>
-                            Destination
-                        </th>
+                        <th>Chain</th>
+                        <th>Protocol</th>
+                        <th>Action</th>
+                        <th>Port</th>
+                        <th>Source</th>
+                        <th>Destination</th>
                     </tr>
                 </thead>
                 <tbody>
                     <% rules.forEach(rule=> { %>
                         <tr>
+                            <td>
+                                <%= rule.chain %>
+                            </td>
                             <td>
                                 <%= rule.protocol %>
                             </td>
