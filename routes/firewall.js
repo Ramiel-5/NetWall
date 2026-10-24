@@ -4,7 +4,8 @@ const router = express.Router();
 const {
     getFirewallRules,
     parseFirewallRules,
-    addFirewallRule
+    addFirewallRule,
+    deleteFirewallRule
 } = require("../services/firewallService");
 
 router.get("/", async (req, res) => {
@@ -40,6 +41,25 @@ router.post("/add", async (req, res) => {
     } catch (error) {
         console.error("Failed to add firewall rule:", error.message);
         res.status(400).send("Failed to add firewall rule: " + error.message);
+    }
+});
+router.post("/delete", async (req, res) => {
+    try {
+        const { id } = req.body;
+
+        if (
+            typeof id !== "string" ||
+            !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(id)
+        ) {
+            return res.status(400).send("Invalid rule ID");
+        }
+
+        await deleteFirewallRule(id);
+
+        res.redirect("/firewall");
+    } catch (error) {
+        console.error("Failed to delete firewall rule:", error.message);
+        res.status(400).send("Failed to delete firewall rule");
     }
 });
 
