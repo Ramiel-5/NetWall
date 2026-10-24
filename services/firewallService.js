@@ -19,7 +19,6 @@ function getFirewallRules() {
 }
 function getDir(name) {
     return new Promise((resolve, reject) => {
-        const dir = getDir("iptables")
         execFile(
             "which",
             [name],
@@ -27,7 +26,8 @@ function getDir(name) {
                 if (error) {
                     return reject(error);
                 }
-                resolve(stdout);
+
+                resolve(stdout.trim());
             }
         );
     });
