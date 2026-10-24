@@ -11,7 +11,10 @@ router.get("/", async (req, res) => {
         const rawRules = await getFirewallRules();
         const rules = parseFirewallRules(rawRules);
 
-        res.render("firewall", { rules });
+        res.render("firewall", {
+            rules,
+            activePage: "firewall"
+        });
     } catch (error) {
         console.error(error);
         res.status(500).send("Failed to load firewall rules");
