@@ -1,0 +1,65 @@
+
+< !DOCTYPE html >
+    <html lang="en">
+        <head>
+            <meta charset="UTF-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0">
+                    <title>Edit Firewall Rule</title>
+                </head>
+                <body>
+                    <h1>Edit Firewall Rule</h1>
+
+                    <form action="/firewall/update" method="POST">
+                        <input type="hidden" name="id" value="<%= rule.id %>">
+
+                            <label for="chain">Chain</label>
+                            <select id="chain" name="chain" required>
+                                <option value="INPUT" <%= rule.chain === "INPUT" ? "selected" : "" %>>INPUT</option>
+                            <option value="FORWARD" <%= rule.chain === "FORWARD" ? "selected" : "" %>>FORWARD</option>
+                        <option value="OUTPUT" <%= rule.chain === "OUTPUT" ? "selected" : "" %>>OUTPUT</option>
+                </select>
+
+                <br><br>
+
+                    <label for="protocol">Protocol</label>
+                    <select id="protocol" name="protocol" required>
+                        <% ["tcp", "udp", "icmp", "all"].forEach(protocol => { %>
+                <option value="<%= protocol %>" <%= rule.protocol === protocol ? "selected" : "" %>><%= protocol.toUpperCase() %></option>
+                    <% }) %>
+                </select>
+
+                    <br><br>
+
+                        <label for="action">Action</label>
+                        <select id="action" name="action" required>
+                            <% ["ACCEPT", "DROP", "REJECT"].forEach(action => { %>
+                <option value="<%= action %>" <%= rule.action === action ? "selected" : "" %>><%= action %></option>
+                        <% }) %>
+                    </select>
+
+                        <br><br>
+
+                            <label for="port">Destination Port</label>
+                            <input id="port" name="port" type="number"
+                                min="1" max="65535"
+                                value="<%= rule.port === 'any' ? '' : rule.port %>">
+
+                                <br><br>
+
+                                    <label for="source">Source IPv4/CIDR</label>
+                                    <input id="source" name="source" type="text"
+                                        value="<%= rule.source === 'any' ? '' : rule.source %>">
+
+                                        <br><br>
+
+                                            <label for="destination">Destination IPv4/CIDR</label>
+                                            <input id="destination" name="destination" type="text"
+                                                value="<%= rule.destination === 'any' ? '' : rule.destination %>">
+
+                                                <br><br>
+
+                                                    <button type="submit">Save Changes</button>
+                                                    <a href="/firewall">Cancel</a>
+                                                </form>
+                                                </body>
+                                            </html>

@@ -7,39 +7,38 @@
         </div>
     </div>
 
-    <div class="sidebar-section">MAIN MENU</div>
+    <div class="sidebar-section">Status</div>
 
     <nav class="sidebar-nav">
         <a href="/" class="sidebar-link <%= activePage === 'dashboard' ? 'active' : '' %>">
-            <span class="menu-icon">▦</span>
             <span>Dashboard</span>
         </a>
 
-        <a href="/routing" class="sidebar-link <%= activePage === 'routing' ? 'active' : '' %>">
-            <span class="menu-icon">⇄</span>
-            <span>Routing</span>
-        </a>
-
-        <a href="/firewall" class="sidebar-link <%= activePage === 'firewall' ? 'active' : '' %>">
-            <span class="menu-icon">◈</span>
-            <span>Firewall Rules</span>
-        </a>
-
         <a href="/interfaces" class="sidebar-link <%= activePage === 'interfaces' ? 'active' : '' %>">
-            <span class="menu-icon">⌘</span>
+
             <span>Interfaces</span>
         </a>
 
-        <div class="sidebar-section">MONITORING</div>
-
         <a href="/logs" class="sidebar-link <%= activePage === 'logs' ? 'active' : '' %>">
-            <span class="menu-icon">≡</span>
+
             <span>System Logs</span>
         </a>
 
-        <a href="/diagnostics" class="sidebar-link <%= activePage === 'diagnostics' ? 'active' : '' %>">
-            <span class="menu-icon">⌁</span>
-            <span>Diagnostics</span>
+        <!-- <a href="/routing" class="sidebar-link <%= activePage === 'routing' ? 'active' : '' %>">
+
+            <span>Routing</span>
+        </a> -->
+
+        <div class="sidebar-section">Firewall</div>
+        <a href="/firewall" class="sidebar-link <%= activePage === 'firewall' ? 'active' : '' %>">
+
+            <span>Firewall Rules</span>
+        </a>
+
+        <div class="sidebar-section">Diagnostics</div>
+
+        <a href="/arp" class="sidebar-link <%= activePage === 'arp' ? 'active' : '' %>">
+            <span>ARP Table</span>
         </a>
     </nav>
 
