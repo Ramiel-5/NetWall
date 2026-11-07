@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NetWall - ARP Table</title>
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+
+<body>
+
+    <%- include('partials/sidebar') %>
+
+    <main class="content">
+
+        <div class="page-header">
+            <div>
+                <h1>ARP Table</h1>
+                <p>Network / ARP Table</p>
+            </div>
+
+            <button id="refresh-button" type="button">
+                Refresh
+            </button>
+        </div>
+
+        <div id="arp-summary">
+            Dynamic ARP Entries: <span id="arp-count">0</span>
+        </div>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>IP Address</th>
+                    <th>MAC Address</th>
+                    <th>Interface</th>
+                    <th>State</th>
+                </tr>
+            </thead>
+
+            <tbody id="arp-table-body">
+                <tr>
+                    <td colspan="4">Loading...</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <p id="arp-status"></p>
+
+    </main>
+
+    <script src="/js/arp.js"></script>
+
+</body>
+</html>

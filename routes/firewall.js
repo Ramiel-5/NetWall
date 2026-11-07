@@ -1,67 +1,140 @@
 const express = require("express");
-const router = express.Router();
+
+const {
+    readAssignments
+} = require("../services/interfaceService");
 
 const {
     getFirewallRules,
-    parseFirewallRules,
     addFirewallRule,
-    deleteFirewallRule
+    updateFirewallRule,
+    deleteFirewallRule,
+    toggleFirewallRule,
+    reorderFirewallRules
 } = require("../services/firewallService");
 
-router.get("/", async (req, res) => {
+const router = express.Router();
+
+// Firewall Rules page
+router.get("/", async (req, res, next) => {
     try {
-        const rawRules = await getFirewallRules();
-        const rules = parseFirewallRules(rawRules);
+        const data = await readAssignments();
+
+        const rules = await getFirewallRules();
 
         res.render("firewall", {
-            rules,
-            activePage: "firewall"
+            activePage: "firewall",
+            interfaces: data.interfaces,
+            rules
         });
-        console.log(rules);
-    } catch (error) {
-        console.error(error);
-        res.status(500).send("Failed to load firewall rules");
+
+    } catch (err) {
+        next(err);
     }
 });
 
-router.post("/add", async (req, res) => {
+// Get rules
+router.get("/rules", async (req, res, next) => {
     try {
-        console.log("Request body:", req.body);
-        console.log("Content-Type:", req.headers["content-type"])
-        await addFirewallRule({
-            chain: req.body.chain,
-            protocol: req.body.protocol,
-            action: req.body.action,
-            port: req.body.port,
-            source: req.body.source,
-            destination: req.body.destination
-        });
+        const interfaceId = req.query.interface || null;
 
-        res.redirect("/firewall");
-    } catch (error) {
-        console.error("Failed to add firewall rule:", error.message);
-        res.status(400).send("Failed to add firewall rule: " + error.message);
+        const rules = await getFirewallRules(interfaceId);
+
+        res.json({ rules });
+
+    } catch (err) {
+        next(err);
     }
 });
-router.post("/delete", async (req, res) => {
-    console.log("DELETE ROUTE CALLED", req.body);
+
+// Add rule
+router.post("/rules", async (req, res) => {
     try {
-        const { id } = req.body;
+        const rule = await addFirewallRule(req.body);
 
-        if (
-            typeof id !== "string" ||
-            !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/.test(id)
-        ) {
-            return res.status(400).send("Invalid rule ID");
-        }
+        res.status(201).json({
+            message: "Rule created successfully",
+            rule
+        });
 
-        await deleteFirewallRule(id);
+    } catch (err) {
+        res.status(400).json({
+            error: err.message
+        });
+    }
+});
 
-        res.redirect("/firewall");
-    } catch (error) {
-        console.error("Delete error:", error);
-        console.error("Failed to delete firewall rule:", error.message);
-        res.status(400).send("Failed to delete firewall rule");
+// Update rule
+router.put("/rules/:id", async (req, res) => {
+    try {
+        const rule = await updateFirewallRule(
+            req.params.id,
+            req.body
+        );
+
+        res.json({
+            message: "Rule updated successfully",
+            rule
+        });
+
+    } catch (err) {
+        res.status(400).json({
+            error: err.message
+        });
+    }
+});
+
+// Delete rule
+router.delete("/rules/:id", async (req, res) => {
+    try {
+        await deleteFirewallRule(req.params.id);
+
+        res.json({
+            message: "Rule deleted successfully"
+        });
+
+    } catch (err) {
+        res.status(400).json({
+            error: err.message
+        });
+    }
+});
+
+// Toggle rule
+router.patch("/rules/:id/toggle", async (req, res) => {
+    try {
+        const rule = await toggleFirewallRule(
+            req.params.id
+        );
+
+        res.json({
+            message: "Rule status updated",
+            rule
+        });
+
+    } catch (err) {
+        res.status(400).json({
+            error: err.message
+        });
+    }
+});
+
+// Reorder rules
+router.put("/rules/order", async (req, res) => {
+    try {
+        const rules = await reorderFirewallRules(
+            req.body.ids
+        );
+
+        res.json({
+            message: "Rule order updated",
+            rules
+        });
+
+    } catch (err) {
+        res.status(400).json({
+            error: err.message
+        });
     }
 });
 

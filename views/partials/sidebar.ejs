@@ -14,25 +14,24 @@
             <span>Dashboard</span>
         </a>
 
-        <a href="/interfaces" class="sidebar-link <%= activePage === 'interfaces' ? 'active' : '' %>">
-
-            <span>Interfaces</span>
-        </a>
-
         <a href="/logs" class="sidebar-link <%= activePage === 'logs' ? 'active' : '' %>">
-
             <span>System Logs</span>
         </a>
 
-        <!-- <a href="/routing" class="sidebar-link <%= activePage === 'routing' ? 'active' : '' %>">
+        <div class="sidebar-section">Interfaces</div>
 
-            <span>Routing</span>
-        </a> -->
+        <a id="assignment-link"
+           href="/interfaces"
+           class="sidebar-link <%= activePage === 'interfaces' ? 'active' : '' %>">
+            <span>Assignment</span>
+        </a>
+
+        <div id="logical-interface-list"></div>
 
         <div class="sidebar-section">Firewall</div>
-        <a href="/firewall" class="sidebar-link <%= activePage === 'firewall' ? 'active' : '' %>">
 
-            <span>Firewall Rules</span>
+        <a href="/firewall" class="sidebar-link <%= activePage === 'firewall' ? 'active' : '' %>">
+            <span>Rules</span>
         </a>
 
         <div class="sidebar-section">Diagnostics</div>
@@ -42,15 +41,7 @@
         </a>
     </nav>
 
-    <div class="sidebar-bottom">
-        <div class="connection-status">
-            <span class="status-dot"></span>
-            <div>
-                <strong>Firewall Server</strong>
-                <small>Connection status: Unknown</small>
-            </div>
-        </div>
-
-        <div class="sidebar-version">Version 1.0.0 Alpha</div>
-    </div>
+    <div class="sidebar-version">Version 1.0.0 Alpha</div>
 </aside>
+
+<script src="/js/sidebar.js" defer></script>

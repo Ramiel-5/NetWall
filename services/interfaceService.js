@@ -1,46 +1,97 @@
-const os = require('node:os');
-const { execFile } = require('node:child_process');
 
-function getInterfaceStatus() {
-    return new Promise((resolve, reject) => {
-        execFile(
-            "ip",
-            ["-j", "address", "show"],
-            (error, stdout) => {
-                if (error) {
-                    return reject(error);
-                }
+const os = require("os");
+const path = require("path");
+const fs = require("fs");
 
-                try {
-                    const interfaces = JSON.parse(stdout);
+const CONFIG_DIR = path.join(__dirname, "..", "data");
 
-                    resolve(
-                        interfaces.map(item => ({
-                            name: item.ifname,
+const CONFIG_FILE = path.join(CONFIG_DIR, "interfaces.json");
 
-                            ipv4: item.addr_info
-                                .filter(ip => ip.family === "inet")
-                                .map(ip => ip.local),
-                            prefix: item.addr_info
-                                .filter(ip => ip.family === "inet")
-                                .map(ip => ip.prefixlen),
-                            ipv6: item.addr_info
-                                .filter(ip => ip.family === "inet6")
-                                .map(ip => ip.local),
+// Get available network interfaces, excluding loopback
+function getInterfaces() {
+    const interfaces = os.networkInterfaces() || {};
 
-                            status: item.operstate.toLowerCase()
-                        }))
-                            .sort((a, b) =>
-                                a.name.localeCompare(b.name)
-                            )
-                    );
-                } catch (error) {
-                    reject(error);
-                }
-            }
-        );
-    });
+    return Object.fromEntries(
+        Object.entries(interfaces).filter(([name]) => {
+            const interfaceName = name.toLowerCase();
+
+            return interfaceName !== "lo" &&
+                !/^lo\d*$/.test(interfaceName) &&
+                !interfaceName.includes("loopback");
+        })
+    );
 }
 
+// Default logical interfaces
+function createDefaultAssignments() {
+    return {
+        interfaces: [
+            {
+                id: "WAN",
+                name: "WAN",
+                nic: ""
+            },
+            {
+                id: "LAN",
+                name: "LAN",
+                nic: ""
+            }
+        ]
+    };
+}
 
-module.exports = getInterfaceStatus;
+// Read interface assignments
+async function readAssignments() {
+    try {
+        const data = await fs.promises.readFile(
+            CONFIG_FILE,
+            "utf8"
+        );
+
+        const config = JSON.parse(data);
+
+        if (!config || !Array.isArray(config.interfaces)) {
+            throw new Error("Invalid interface configuration");
+        }
+
+        return config;
+
+    } catch (error) {
+        if (error.code === "ENOENT") {
+            const defaults = createDefaultAssignments();
+
+            await saveAssignments(defaults.interfaces);
+
+            return defaults;
+        }
+
+        throw error;
+    }
+}
+
+// Save interface assignments
+async function saveAssignments(assignments) {
+    if (!Array.isArray(assignments)) {
+        throw new Error("Invalid assignments data");
+    }
+
+    await fs.promises.mkdir(CONFIG_DIR, {
+        recursive: true
+    });
+
+    const config = {
+        interfaces: assignments
+    };
+
+    await fs.promises.writeFile(
+        CONFIG_FILE,
+        JSON.stringify(config, null, 2),
+        "utf8"
+    );
+}
+
+module.exports = {
+    getInterfaces,
+    readAssignments,
+    saveAssignments
+};

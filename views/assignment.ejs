@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>NetWall - Interface Assignments</title>
+
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+
+<body>
+
+    <%- include('partials/sidebar') %>
+
+    <div class="content">
+
+        <header class="breadcrumb">
+            <span>Interfaces</span> / Interface Assignments
+        </header>
+
+        <h1>Interface Assignments</h1>
+
+        <div class="table-container">
+
+            <table class="interface-table">
+
+                <thead>
+                    <tr>
+                        <th>Interfaces (logical)</th>
+                        <th>Network port</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+
+                <tbody id="assignment-rows">
+                    <tr>
+                        <td colspan="3">Loading interfaces...</td>
+                    </tr>
+                </tbody>
+
+            </table>
+
+        </div>
+
+        <div class="bottom-actions">
+
+            <button
+                id="add-button"
+                class="add-button"
+                type="button">
+                + Add
+            </button>
+
+        </div>
+
+        <div class="save-area">
+
+            <button
+                id="save-button"
+                class="save-button"
+                type="button">
+                Save
+            </button>
+
+            <p id="status" role="status" aria-live="polite"></p>
+
+        </div>
+
+    </div>
+
+    <script src="/js/assignment.js" defer></script>
+
+</body>
+</html>

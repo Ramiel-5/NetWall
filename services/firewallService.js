@@ -1,166 +1,316 @@
-
-const { execFile } = require("child_process");
-
-
-function getFirewallRules() {
-    return new Promise(async (resolve, reject) => {
-        const dir = await getDir("iptables")
-        execFile(
-            "sudo",
-            ["-n", dir, "-S"],
-            (error, stdout, stderr) => {
-                if (error) {
-                    return reject(error);
-                }
-
-                resolve(stdout);
-            }
-        );
-    });
-}
-
-function getDir(name) {
-    return new Promise((resolve, reject) => {
-        execFile(
-            "which",
-            [name],
-            (error, stdout, stderr) => {
-                if (error) {
-                    return reject(error);
-                }
-
-                resolve(stdout.trim());
-            }
-        );
-    });
-}
-function parseFirewallRules(rawRules) {
-    return rawRules
-        .split("\n")
-        .filter(line => line.startsWith("-A "))
-        .map(line => {
-            const args = line.match(/"[^"]*"|'[^']*'|\S+/g) || [];
-
-            const getValue = (...options) => {
-                for (let i = 0; i < args.length; i++) {
-                    if (options.includes(args[i])) {
-                        return args[i + 1] ?? null;
-                    }
-                }
-
-                return null;
-
-            };
-            const comment = (getValue("--comment") || "")
-                .replace(/^["']|["']$/g, "");
-
-            const managed = comment.startsWith("webfw:");
-            const rawRule = line;
-
-            return {
-                id: managed ? comment.slice("webfw:".length) : null,
-                managed,
-                chain: args[1],
-                protocol: getValue("-p", "--protocol") || "all",
-                action: getValue("-j", "--jump") || "UNKNOWN",
-                port: getValue("--dport", "--dports", "--port") || "any",
-                source: getValue("-s", "--source") || "any",
-                destination: getValue("-d", "--destination") || "any",
-                rawRule
-            };
-        });
-}
-
-
+const fs = require("fs/promises");
+const path = require("path");
 const net = require("net");
+const { randomUUID } = require("crypto");
 
-async function addFirewallRule(data) {
-    const { chain, protocol, action, port, source, destination } = data;
+const {
+    readAssignments
+} = require("./interfaceService");
 
-    const validChains = ["INPUT", "FORWARD", "OUTPUT"];
-    const validProtocols = ["tcp", "udp", "icmp", "all"];
-    const validActions = ["ACCEPT", "DROP", "REJECT"];
+const DATA_DIR = path.join(__dirname, "..", "data");
+const CONFIG_FILE = path.join(DATA_DIR, "firewall-rules.json");
 
-    if (!validChains.includes(chain)) {
-        throw new Error("Invalid chain");
+const VALID_ACTIONS = ["ACCEPT", "DROP", "REJECT"];
+const VALID_PROTOCOLS = ["tcp", "udp", "icmp", "all"];
+
+// Read configuration
+async function readConfig() {
+    try {
+        const content = await fs.readFile(CONFIG_FILE, "utf8");
+        const data = JSON.parse(content);
+
+        if (!Array.isArray(data.rules)) {
+            throw new Error("Invalid firewall configuration");
+        }
+
+        return data;
+
+    } catch (err) {
+        if (err.code === "ENOENT") {
+            return { rules: [] };
+        }
+
+        throw err;
+    }
+}
+
+// Save configuration
+async function saveConfig(data) {
+    await fs.mkdir(DATA_DIR, { recursive: true });
+
+    const tempFile = `${CONFIG_FILE}.tmp`;
+
+    await fs.writeFile(
+        tempFile,
+        JSON.stringify(data, null, 4),
+        "utf8"
+    );
+
+    await fs.rename(tempFile, CONFIG_FILE);
+}
+
+// Get all rules
+async function getFirewallRules(interfaceId = null) {
+    const data = await readConfig();
+
+    const rules = [...data.rules].sort(
+        (a, b) => a.position - b.position
+    );
+
+    if (!interfaceId) {
+        return rules;
     }
 
-    if (!validProtocols.includes(protocol)) {
-        throw new Error("Invalid protocol");
+    return rules.filter(
+        rule => rule.interface === interfaceId
+    );
+}
+
+// Validate IP or CIDR
+function validNetwork(value) {
+    if (!value) return true;
+
+    const parts = value.split("/");
+
+    if (parts.length > 2) return false;
+    if (!net.isIPv4(parts[0])) return false;
+
+    if (parts.length === 1) return true;
+
+    if (!/^\d+$/.test(parts[1])) return false;
+
+    return Number(parts[1]) <= 32;
+}
+
+// Validate port
+function validPort(value) {
+    if (!value) return true;
+
+    if (!/^\d+$/.test(String(value))) {
+        return false;
     }
 
-    if (!validActions.includes(action)) {
+    const port = Number(value);
+
+    return port >= 1 && port <= 65535;
+}
+
+// Validate rule data
+async function validateRule(rule) {
+    if (!rule || typeof rule !== "object") {
+        throw new Error("Invalid rule data");
+    }
+
+    const {
+        interface: interfaceId,
+        action,
+        protocol,
+        source,
+        sourcePort,
+        destination,
+        destinationPort,
+        gateway,
+        description
+    } = rule;
+
+    const assignments = await readAssignments();
+
+    const validInterfaces = assignments.interfaces.map(
+        item => item.id
+    );
+
+    validInterfaces.push("FLOATING");
+
+    if (!validInterfaces.includes(interfaceId)) {
+        throw new Error("Invalid interface");
+    }
+
+    if (!VALID_ACTIONS.includes(action)) {
         throw new Error("Invalid action");
     }
 
-    if (port && (
-        !["tcp", "udp"].includes(protocol) ||
-        !/^\d+$/.test(port) ||
-        Number(port) < 1 ||
-        Number(port) > 65535
-    )) {
-        throw new Error("Invalid port or protocol");
+    if (!VALID_PROTOCOLS.includes(protocol)) {
+        throw new Error("Invalid protocol");
     }
 
-    function validNetwork(value) {
-        if (!value) return true;
-
-        const parts = value.split("/");
-        if (parts.length > 2 || !net.isIPv4(parts[0])) return false;
-        if (parts.length === 1) return true;
-        if (!/^\d+$/.test(parts[1])) return false;
-
-        const maxPrefix = 32;
-        return Number(parts[1]) <= maxPrefix;
+    if (
+        !validNetwork(source) ||
+        !validNetwork(destination)
+    ) {
+        throw new Error("Invalid source or destination");
     }
 
-    if (!validNetwork(source) || !validNetwork(destination)) {
-        throw new Error("Invalid source or destination IP/CIDR");
+    if (
+        !validPort(sourcePort) ||
+        !validPort(destinationPort)
+    ) {
+        throw new Error("Invalid port");
     }
 
+    if (
+        (sourcePort || destinationPort) &&
+        !["tcp", "udp"].includes(protocol)
+    ) {
+        throw new Error("Ports require TCP or UDP");
+    }
 
-    const args = [
-        "/usr/local/sbin/firewall-rule-add",
-        chain,
-        protocol,
-        action,
-        port || "-",
-        source || "-",
-        destination || "-"
-    ];
+    if (gateway && !net.isIPv4(gateway)) {
+        throw new Error("Invalid gateway");
+    }
 
-    return new Promise((resolve, reject) => {
-        execFile("sudo", ["-n", ...args], (error, stdout, stderr) => {
-            if (error) {
-                return reject(new Error(stderr || error.message));
-            }
-
-            resolve();
-        });
-    });
-
+    if (
+        typeof description !== "string" ||
+        description.length > 200
+    ) {
+        throw new Error("Invalid description");
+    }
 }
-function deleteFirewallRule(id) {
-    return new Promise((resolve, reject) => {
-        execFile(
-            "sudo",
-            ["-n", "/usr/local/sbin/firewall-rule-delete", id],
-            (error, stdout, stderr) => {
-                if (error) {
-                    return reject(
-                        new Error(stderr.trim() || error.message)
-                    );
-                }
 
-                resolve(stdout.trim());
-            }
-        );
+// Create rule
+async function addFirewallRule(ruleData) {
+    await validateRule(ruleData);
+
+    const data = await readConfig();
+
+    const rule = {
+        id: randomUUID(),
+
+        interface: ruleData.interface,
+        action: ruleData.action,
+        protocol: ruleData.protocol,
+
+        source: ruleData.source || "",
+        sourcePort: ruleData.sourcePort || "",
+
+        destination: ruleData.destination || "",
+        destinationPort: ruleData.destinationPort || "",
+
+        gateway: ruleData.gateway || "",
+        description: ruleData.description.trim(),
+
+        enabled: true,
+        position: data.rules.length + 1
+    };
+
+    data.rules.push(rule);
+
+    await saveConfig(data);
+
+    return rule;
+}
+
+// Update rule
+async function updateFirewallRule(id, ruleData) {
+    await validateRule(ruleData);
+
+    const data = await readConfig();
+
+    const index = data.rules.findIndex(
+        rule => rule.id === id
+    );
+
+    if (index === -1) {
+        throw new Error("Rule not found");
+    }
+
+    const oldRule = data.rules[index];
+
+    data.rules[index] = {
+        ...oldRule,
+
+        interface: ruleData.interface,
+        action: ruleData.action,
+        protocol: ruleData.protocol,
+
+        source: ruleData.source || "",
+        sourcePort: ruleData.sourcePort || "",
+
+        destination: ruleData.destination || "",
+        destinationPort: ruleData.destinationPort || "",
+
+        gateway: ruleData.gateway || "",
+        description: ruleData.description.trim()
+    };
+
+    await saveConfig(data);
+
+    return data.rules[index];
+}
+
+// Delete rule
+async function deleteFirewallRule(id) {
+    const data = await readConfig();
+
+    const index = data.rules.findIndex(
+        rule => rule.id === id
+    );
+
+    if (index === -1) {
+        throw new Error("Rule not found");
+    }
+
+    data.rules.splice(index, 1);
+
+    data.rules.forEach((rule, index) => {
+        rule.position = index + 1;
     });
+
+    await saveConfig(data);
+}
+
+// Enable / Disable rule
+async function toggleFirewallRule(id) {
+    const data = await readConfig();
+
+    const rule = data.rules.find(
+        item => item.id === id
+    );
+
+    if (!rule) {
+        throw new Error("Rule not found");
+    }
+
+    rule.enabled = !rule.enabled;
+
+    await saveConfig(data);
+
+    return rule;
+}
+
+// Reorder rules
+async function reorderFirewallRules(ids) {
+    if (!Array.isArray(ids)) {
+        throw new Error("Invalid rule order");
+    }
+
+    const data = await readConfig();
+
+    const rules = data.rules;
+
+    if (
+        ids.length !== rules.length ||
+        new Set(ids).size !== rules.length ||
+        !ids.every(id => rules.some(rule => rule.id === id))
+    ) {
+        throw new Error("Invalid rule order");
+    }
+
+    ids.forEach((id, index) => {
+        const rule = rules.find(item => item.id === id);
+
+        rule.position = index + 1;
+    });
+
+    await saveConfig(data);
+
+    return rules;
 }
 
 module.exports = {
     getFirewallRules,
-    parseFirewallRules,
     addFirewallRule,
-    deleteFirewallRule
+    updateFirewallRule,
+    deleteFirewallRule,
+    toggleFirewallRule,
+    reorderFirewallRules
 };

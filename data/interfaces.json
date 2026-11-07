@@ -1,0 +1,14 @@
+{
+  "interfaces": [
+    {
+      "id": "WAN",
+      "name": "WAN",
+      "nic": "enp0s3"
+    },
+    {
+      "id": "OPT1",
+      "name": "OPT1",
+      "nic": ""
+    }
+  ]
+}

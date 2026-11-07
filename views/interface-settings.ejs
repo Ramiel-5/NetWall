@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>NetWall - Interface Settings</title>
+
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+
+<body>
+
+    <%- include('partials/sidebar') %>
+
+    <div class="content">
+
+        <header class="breadcrumb">
+            <a href="/interfaces">Interfaces</a>
+            /
+            <span><%= interfaceItem.name %> (<%= interfaceItem.nic || "Not assigned" %>)</span>
+        </header>
+
+        <h1>Interface Settings</h1>
+
+        <form id="interface-settings-form">
+
+            <div class="config-container">
+
+                <div class="config-header">
+                    General Configuration
+                </div>
+
+                <!-- Enable -->
+                <div class="config-row">
+                    <label class="config-label">Enable</label>
+
+                    <div class="config-field">
+                        <label class="checkbox-label">
+                            <input
+                                type="checkbox"
+                                id="enabled"
+                                name="enabled"
+                                <%= interfaceItem.enabled !== false ? "checked" : "" %>
+                            >
+                            Enable interface
+                        </label>
+                    </div>
+                </div>
+
+                <!-- Description -->
+                <div class="config-row">
+                    <label for="name" class="config-label">
+                        Description
+                    </label>
+
+                    <div class="config-field">
+                        <input
+                            type="text"
+                            id="name"
+                            name="name"
+                            value="<%= interfaceItem.name %>"
+                        >
+
+                        <small>
+                            Enter a description (name) for the interface here.
+                        </small>
+                    </div>
+                </div>
+
+                <!-- IPv4 Configuration -->
+                <div class="config-row">
+                    <label for="ipv4Type" class="config-label">
+                        IPv4 Configuration Type
+                    </label>
+
+                    <div class="config-field">
+                        <select id="ipv4Type" name="ipv4Type">
+
+                            <option value="none"
+                                <%= interfaceItem.ipv4Type === "none" ? "selected" : "" %>>
+                                None
+                            </option>
+
+                            <option value="static"
+                                <%= interfaceItem.ipv4Type === "static" ? "selected" : "" %>>
+                                Static IPv4
+                            </option>
+
+                            <option value="dhcp"
+                                <%= !interfaceItem.ipv4Type || interfaceItem.ipv4Type === "dhcp" ? "selected" : "" %>>
+                                DHCP
+                            </option>
+
+                        </select>
+                    </div>
+                </div>
+
+                <!-- MAC Address -->
+                <div class="config-row">
+                    <label for="macAddress" class="config-label">
+                        MAC Address
+                    </label>
+
+                    <div class="config-field">
+                        <input
+                            type="text"
+                            id="macAddress"
+                            name="macAddress"
+                            placeholder="xx:xx:xx:xx:xx:xx"
+                            value="<%= interfaceItem.macAddress || '' %>"
+                        >
+
+                        <small>
+                            This field can be used to modify the MAC address
+                            of this interface. Leave blank to use the default MAC address.
+                        </small>
+                    </div>
+                </div>
+
+                <!-- MTU -->
+                <div class="config-row">
+                    <label for="mtu" class="config-label">
+                        MTU
+                    </label>
+
+                    <div class="config-field">
+                        <input
+                            type="number"
+                            id="mtu"
+                            name="mtu"
+                            min="576"
+                            value="<%= interfaceItem.mtu || '' %>"
+                        >
+
+                        <small>
+                            If this field is blank, the adapter's default MTU will be used.
+                            This is typically 1500 bytes.
+                        </small>
+                    </div>
+                </div>
+
+                <!-- MSS -->
+                <div class="config-row">
+                    <label for="mss" class="config-label">
+                        MSS
+                    </label>
+
+                    <div class="config-field">
+                        <input
+                            type="number"
+                            id="mss"
+                            name="mss"
+                            min="1"
+                            value="<%= interfaceItem.mss || '' %>"
+                        >
+
+                        <small>
+                            If a value is entered, MSS clamping will be applied
+                            to TCP connections.
+                        </small>
+                    </div>
+                </div>
+
+                <!-- Speed and Duplex -->
+                <div class="config-row">
+                    <label for="speedDuplex" class="config-label">
+                        Speed and Duplex
+                    </label>
+
+                    <div class="config-field">
+                        <select id="speedDuplex" name="speedDuplex">
+
+                            <option value="auto"
+                                <%= !interfaceItem.speedDuplex || interfaceItem.speedDuplex === "auto" ? "selected" : "" %>>
+                                Default (no preference, typically autoselect)
+                            </option>
+
+                            <option value="10-half">10 Mbps Half Duplex</option>
+                            <option value="10-full">10 Mbps Full Duplex</option>
+                            <option value="100-half">100 Mbps Half Duplex</option>
+                            <option value="100-full">100 Mbps Full Duplex</option>
+                            <option value="1000-full">1000 Mbps Full Duplex</option>
+
+                        </select>
+
+                        <small>
+                            Select the desired speed and duplex mode for this interface.
+                        </small>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Interface Information -->
+            <div class="config-container">
+
+                <div class="config-header">
+                    Interface Information
+                </div>
+
+                <div class="config-row">
+                    <label class="config-label">
+                        Logical Interface ID
+                    </label>
+
+                    <div class="config-field">
+                        <span class="config-value">
+                            <%= interfaceItem.id %>
+                        </span>
+                    </div>
+                </div>
+
+                <div class="config-row">
+                    <label class="config-label">
+                        Network Port
+                    </label>
+
+                    <div class="config-field">
+                        <span class="config-value">
+                            <%= interfaceItem.nic || "Not assigned" %>
+                        </span>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Actions -->
+            <div class="config-actions">
+
+                <a href="/interfaces" class="config-back-button">
+                    Back
+                </a>
+
+                <button type="submit" class="config-save-button">
+                    Save
+                </button>
+
+            </div>
+
+        </form>
+
+    </div>
+
+</body>
+</html>

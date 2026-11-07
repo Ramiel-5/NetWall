@@ -96,11 +96,7 @@ body{
     font-weight: bold;
 }
 
-.menu-icon {
-    width: 20px;
-    text-align: center;
-    font-size: 19px;
-}
+
 
 .sidebar-bottom {
     margin-top: auto;
@@ -248,4 +244,126 @@ tbody tr:hover {
 #update-status.connection-error {
     color: #dc2626;
     font-weight: 600;
+}
+
+.sidebar-interface-link {
+    padding-left: 45px !important;
+    font-size: 13px;
+}
+/* Interface Configuration */
+
+.config-container {
+    width: 100%;
+    margin-bottom: 24px;
+    background: #fff;
+    border: 1px solid #ddd;
+}
+
+.config-header {
+    padding: 7px 14px;
+    background: #414141;
+    color: #fff;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+}
+
+.config-row {
+    display: grid;
+    grid-template-columns: 185px 1fr;
+    padding: 12px 15px;
+    border-bottom: 1px solid #ddd;
+    align-items: start;
+}
+
+.config-row:last-child {
+    border-bottom: none;
+}
+
+.config-label {
+    text-align: right;
+    font-weight: 600;
+    padding: 5px 15px 0 0;
+}
+
+.config-field {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    max-width: 600px;
+}
+
+.config-field input[type="text"],
+.config-field input[type="number"],
+.config-field select {
+    width: 100%;
+    height: 25px;
+    padding: 3px 6px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    background: #fff;
+    color: #444;
+    box-sizing: border-box;
+}
+
+.config-field small {
+    color: #777;
+    line-height: 1.5;
+}
+
+.checkbox-label {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+}
+
+.config-value {
+    padding: 5px 0;
+    color: #555;
+}
+
+.config-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin: 20px 0;
+}
+
+.config-back-button,
+.config-save-button {
+    padding: 9px 18px;
+    border: none;
+    border-radius: 4px;
+    text-decoration: none;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.config-back-button {
+    background: #ddd;
+    color: #333;
+}
+
+.config-save-button {
+    background: #3068a9;
+    color: #fff;
+}
+
+.config-save-button:hover {
+    background: #24558f;
+}
+
+@media (max-width: 700px) {
+    .config-row {
+        grid-template-columns: 1fr;
+        gap: 8px;
+    }
+
+    .config-label {
+        text-align: left;
+        padding: 0;
+    }
+
+    .config-field {
+        max-width: 100%;
+    }
 }
