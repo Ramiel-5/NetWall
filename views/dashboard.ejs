@@ -1,18 +1,118 @@
-<html>
+<!DOCTYPE html>
+<html lang="en">
 
 <head>
-    <title>Dashboard</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Dashboard - NetWall</title>
+
     <link rel="stylesheet" href="/css/style.css">
 </head>
 
 <body>
-    <%- include('partials/sidebar') %>
-        <div>
-            <p>placeholder</p>
+
+    <%- include("partials/sidebar", { activePage: "dashboard" }) %>
+
+    <main class="content">
+        <div class="page-header">
+            <div>
+                <h1>Dashboard</h1>
+                <p>System overview</p>
+            </div>
+
+            <button id="refresh-button" class="refresh-button">
+                Refresh
+            </button>
         </div>
 
+        <!-- System Information -->
+        <section class="dashboard-section">
+            <h2>System Information</h2>
 
+            <div class="dashboard-info-grid">
+
+                <div class="dashboard-card">
+                    <span class="dashboard-label">Hostname</span>
+                    <strong id="hostname">Loading...</strong>
+                </div>
+
+                <div class="dashboard-card">
+                    <span class="dashboard-label">Operating System</span>
+                    <strong id="operating-system">Loading...</strong>
+                </div>
+
+                <div class="dashboard-card">
+                    <span class="dashboard-label">Architecture</span>
+                    <strong id="architecture">Loading...</strong>
+                </div>
+
+                <div class="dashboard-card">
+                    <span class="dashboard-label">System Uptime</span>
+                    <strong id="uptime">Loading...</strong>
+                </div>
+
+            </div>
+        </section>
+
+        <!-- Interfaces -->
+        <section class="dashboard-section">
+            <h2>Interfaces</h2>
+
+            <div class="dashboard-table-container">
+                <table class="dashboard-table">
+                    <thead>
+                        <tr>
+                            <th>Interface</th>
+                            <th>Network Port</th>
+                            <th>IP Address</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+
+                    <tbody id="interface-table-body">
+                        <tr>
+                            <td colspan="4">Loading...</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </section>
+
+        <!-- System Resources -->
+        <section class="dashboard-section">
+            <h2>System Resources</h2>
+
+            <div class="dashboard-info-grid">
+
+                <div class="dashboard-card">
+                    <span class="dashboard-label">CPU Cores</span>
+                    <strong id="cpu-cores">-</strong>
+                </div>
+
+                <div class="dashboard-card">
+                    <span class="dashboard-label">Memory Usage</span>
+                    <strong id="memory-usage">-</strong>
+
+                    <div class="resource-progress">
+                        <div id="memory-progress"></div>
+                    </div>
+
+                    <small id="memory-detail">-</small>
+                </div>
+
+                <div class="dashboard-card">
+                    <span class="dashboard-label">System Load (1 min)</span>
+                    <strong id="load-average">-</strong>
+                </div>
+
+            </div>
+        </section>
+
+        <p id="dashboard-status" class="dashboard-status"></p>
+    </main>
+
+    <script src="/js/dashboard.js"></script>
 
 </body>
-
 </html>

@@ -1,0 +1,17 @@
+{
+    "rules": [
+        {
+            "id": "0e35b55a-0d51-4b86-9e10-5d144bb17f9c",
+            "interface": "WAN",
+            "action": "ACCEPT",
+            "protocol": "all",
+            "source": "",
+            "sourcePort": "",
+            "destination": "",
+            "destinationPort": "",
+            "description": "",
+            "enabled": true,
+            "position": 1
+        }
+    ]
+}

@@ -2,7 +2,7 @@
     <div class="sidebar-brand">
         <div class="brand-icon">F</div>
         <div class="brand-info">
-            <h2>FIREWALL</h2>
+            <h2>NETWALL</h2>
             <span>Management System</span>
         </div>
     </div>
@@ -14,9 +14,9 @@
             <span>Dashboard</span>
         </a>
 
-        <a href="/logs" class="sidebar-link <%= activePage === 'logs' ? 'active' : '' %>">
+        <!-- <a href="/logs" class="sidebar-link <%= activePage === 'logs' ? 'active' : '' %>">
             <span>System Logs</span>
-        </a>
+        </a> -->
 
         <div class="sidebar-section">Interfaces</div>
 
@@ -35,7 +35,9 @@
         </a>
 
         <div class="sidebar-section">Diagnostics</div>
-
+    <a href="/routes" class="sidebar-link <%= activePage === 'routes' ? 'active' : '' %>">
+            <span>Routes</span>
+        </a>
         <a href="/arp" class="sidebar-link <%= activePage === 'arp' ? 'active' : '' %>">
             <span>ARP Table</span>
         </a>

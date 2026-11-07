@@ -1,110 +1,117 @@
-<html>
-
+<!DOCTYPE html>
+<html lang="en">
 <head>
-    <title>Firewall Rules</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NetWall - Firewall Rules</title>
     <link rel="stylesheet" href="/css/style.css">
 </head>
-
 <body>
     <%- include('partials/sidebar') %>
-        <div class="content">
-            <p>Firewall/Rules</p>
-            <form action="/firewall/add" method="POST">
-                <label>Chain</label>
-                <select name="chain" required>
-                    <option value="INPUT">INPUT</option>
-                    <option value="FORWARD">FORWARD</option>
-                    <option value="OUTPUT">OUTPUT</option>
-                </select>
 
-                <label>Protocol</label>
-                <select name="protocol" required>
-                    <option value="tcp">TCP</option>
-                    <option value="udp">UDP</option>
-                    <option value="icmp">ICMP</option>
-                    <option value="all">ALL</option>
-                </select>
+    <main class="content firewall-page">
+        <div class="page-header firewall-page-header">
+            <div>
+                <h1>Firewall Rules</h1>
+                <p>Firewall / Rules</p>
+            </div>
+            <div class="firewall-header-actions">
+                <button type="button" class="secondary-button" id="apply-rules-btn">Apply Rules</button>
+                <button type="button" class="primary-button" id="add-rule-btn">Add Rule</button>
+            </div>
+        </div>
 
-                <label>Action</label>
-                <select name="action" required>
-                    <option value="ACCEPT">ACCEPT</option>
-                    <option value="DROP">DROP</option>
-                    <option value="REJECT">REJECT</option>
-                </select>
+        <div class="firewall-toolbar">
+            <div class="route-summary">Total Rules: <strong id="rule-count">0</strong></div>
+            <span class="firewall-hint">Rules are evaluated from top to bottom within each interface.</span>
+        </div>
 
-                <label>Port</label>
-                <input type="number" name="port" min="1" max="65535" placeholder="Leave empty for any port">
-
-                <label>Source</label>
-                <input type="text" name="source" placeholder="e.g. 192.168.1.0/24">
-
-                <label>Destination</label>
-                <input type="text" name="destination" placeholder="e.g. 192.168.2.0/24">
-
-                <button type="submit">Add Rule</button>
-            </form>
-
-            <table>
+        <div class="table-container firewall-table-container">
+            <table class="firewall-table">
                 <thead>
                     <tr>
-
-                        <th>Chain</th>
-                        <th>Protocol</th>
-                        <th>Action</th>
-                        <th>Port</th>
-                        <th>Source</th>
-                        <th>Destination</th>
-                        <th>Manage</th>
+                        <th>#</th><th>Interface</th><th>Action</th><th>Protocol</th>
+                        <th>Source</th><th>Source Port</th><th>Destination</th>
+                        <th>Destination Port</th><th>Description</th><th>Status</th><th>Actions</th>
                     </tr>
                 </thead>
-                <tbody>
-                    <% if (rules.length===0) { %>
-                        <tr>
-                            <td colspan="8">No firewall rules found.</td>
-                        </tr>
-                        <% } else %>
-                            <% rules.forEach(rule=> { %>
-                                <tr>
-
-                                    <td>
-                                        <%= rule.chain %>
-                                    </td>
-                                    <td>
-                                        <%= rule.protocol %>
-                                    </td>
-                                    <td>
-                                        <%= rule.action %>
-                                    </td>
-                                    <td>
-                                        <%= rule.port %>
-                                    </td>
-                                    <td>
-                                        <%= rule.source %>
-                                    </td>
-                                    <td>
-                                        <%= rule.destination %>
-                                    </td>
-                                    <td>
-                                        <% if (rule.managed && rule.id) { %>
-                                            <form action="/firewall/delete" method="POST">
-                                                <input type="hidden" name="id" value="<%= rule.id %>">
-
-                                                <button type="submit" onclick="return confirm('Delete this rule?')">
-                                                    Delete
-                                                </button>
-                                            </form>
-                                            <% } else { %>
-                                                <span>Not managed</span>
-                                                <% } %>
-                                    </td>
-                                </tr>
-                                <% }); %>
+                <tbody id="firewall-rule-body">
+                    <tr><td colspan="11">Loading firewall rules...</td></tr>
                 </tbody>
             </table>
         </div>
+        <p id="firewall-status" class="firewall-status" role="status" aria-live="polite"></p>
+        <% if (!interfaces || interfaces.length === 0) { %>
+            <div class="firewall-notice">No assigned network interfaces were found. Assign a NIC to WAN, LAN or OPT before creating an interface rule. Floating rules remain available.</div>
+        <% } %>
+    </main>
 
+    <div class="modal" id="rule-modal" aria-hidden="true">
+        <div class="modal-content firewall-modal-content" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+            <div class="modal-header">
+                <h2 id="modal-title">Add Firewall Rule</h2>
+                <button type="button" class="modal-close" id="close-modal-btn" aria-label="Close">&times;</button>
+            </div>
 
+            <form id="firewall-rule-form">
+                <input type="hidden" id="rule-id">
+                <div class="firewall-form-grid">
+                    <div class="form-group">
+                        <label for="interface">Interface</label>
+                        <select id="interface" required>
+                            <% interfaces.forEach(item => { %>
+                                <option value="<%= item.id %>"><%= item.name %></option>
+                            <% }) %>
+                            <option value="FLOATING">Floating</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="action">Action</label>
+                        <select id="action" required>
+                            <option value="ACCEPT">Pass</option>
+                            <option value="DROP">Block</option>
+                            <option value="REJECT">Reject</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="protocol">Protocol</label>
+                        <select id="protocol" required>
+                            <option value="all">Any</option>
+                            <option value="tcp">TCP</option>
+                            <option value="udp">UDP</option>
+                            <option value="icmp">ICMP</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label for="source">Source</label>
+                        <input type="text" id="source" placeholder="Any or 192.168.1.0/24" autocomplete="off">
+                    </div>
+                    <div class="form-group">
+                        <label for="source-port">Source Port</label>
+                        <input type="number" id="source-port" min="1" max="65535" placeholder="Any">
+                    </div>
+                    <div class="form-group">
+                        <label for="destination">Destination</label>
+                        <input type="text" id="destination" placeholder="Any or 192.168.1.10" autocomplete="off">
+                    </div>
+                    <div class="form-group">
+                        <label for="destination-port">Destination Port</label>
+                        <input type="number" id="destination-port" min="1" max="65535" placeholder="Any">
+                    </div>
+                    <div class="form-group firewall-description-group">
+                        <label for="description">Description</label>
+                        <input type="text" id="description" maxlength="200" placeholder="Rule description">
+                    </div>
+                </div>
+                
+                <div class="modal-actions">
+                    <button type="submit" class="primary-button" id="save-rule-btn">Save Rule</button>
+                    <button type="button" class="secondary-button" id="cancel-rule-btn">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
 
+    <script src="/js/firewall.js"></script>
 </body>
-
 </html>

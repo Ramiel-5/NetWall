@@ -1,53 +1,42 @@
 const { execFile } = require("child_process");
 const path = require("path");
 
-const PYTHON = "/usr/bin/python3";
+const PYTHON = process.env.NETWALL_PYTHON || "/usr/bin/python3";
+const SCRIPT = path.join(__dirname, "..", "python", "command.py");
+const PROJECT_DIR = path.join(__dirname, "..");
+const TIMEOUT = 20000;
+let applyQueue = Promise.resolve();
 
-const SCRIPT = path.join(
-    __dirname,
-    "..",
-    "python",
-    "command.py"
-);
-
-let applying = null;
-
-function applyFirewallRules() {
-    // Prevent multiple simultaneous executions
-    if (applying) {
-        return applying;
-    }
-
-    applying = new Promise((resolve, reject) => {
+function executeApply() {
+    return new Promise((resolve, reject) => {
         execFile(
             "sudo",
             ["-n", PYTHON, SCRIPT],
             {
-                timeout: 15000,
-                maxBuffer: 1024 * 1024
+                cwd: PROJECT_DIR,
+                timeout: TIMEOUT,
+                maxBuffer: 1024 * 1024,
+                windowsHide: true
             },
             (error, stdout, stderr) => {
                 if (error) {
-                    return reject(
-                        new Error(
-                            stderr.trim() ||
-                            error.message
-                        )
-                    );
+                    const details = (stderr || stdout || error.message).trim();
+                    const applyError = new Error(details || "Unable to apply firewall rules");
+                    applyError.code = "FIREWALL_APPLY_FAILED";
+                    return reject(applyError);
                 }
-
-                resolve({
-                    message: stdout.trim()
-                });
+                resolve({ message: (stdout || "Firewall rules applied").trim() });
             }
         );
     });
-
-    return applying.finally(() => {
-        applying = null;
-    });
 }
 
-module.exports = {
-    applyFirewallRules
-};
+// Queue applications instead of sharing an in-flight promise. This prevents a
+// manual apply started before a config update from being mistaken for the new apply.
+function applyFirewallRules() {
+    const current = applyQueue.then(executeApply);
+    applyQueue = current.catch(() => {});
+    return current;
+}
+
+module.exports = { applyFirewallRules };

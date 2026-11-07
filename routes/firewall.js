@@ -1,140 +1,103 @@
 const express = require("express");
-
-const {
-    readAssignments
-} = require("../services/interfaceService");
-
-const {
-    getFirewallRules,
-    addFirewallRule,
-    updateFirewallRule,
-    deleteFirewallRule,
-    toggleFirewallRule,
-    reorderFirewallRules
-} = require("../services/firewallService");
-
 const router = express.Router();
 
-// Firewall Rules page
-router.get("/", async (req, res, next) => {
+const firewallService = require("../services/firewallService");
+const { readAssignments } = require("../services/interfaceService");
+const { applyFirewallRules } = require("../services/firewallApplyService");
+
+function sendError(res, error) {
+    console.error("Firewall error:", error);
+    const status = /not found/i.test(error.message)
+        ? 404
+        : error.code === "FIREWALL_APPLY_FAILED" ? 500 : 400;
+    res.status(status).json({ success: false, error: error.message || "Firewall operation failed" });
+}
+
+router.get("/", async (req, res) => {
     try {
-        const data = await readAssignments();
-
-        const rules = await getFirewallRules();
-
+        const assignments = await readAssignments();
         res.render("firewall", {
             activePage: "firewall",
-            interfaces: data.interfaces,
-            rules
+            interfaces: assignments.interfaces.filter(item => item.nic)
         });
-
-    } catch (err) {
-        next(err);
+    } catch (error) {
+        console.error("Unable to load firewall page:", error);
+        res.status(500).send("Unable to load firewall page");
     }
 });
 
-// Get rules
-router.get("/rules", async (req, res, next) => {
+router.get("/data", async (req, res) => {
     try {
-        const interfaceId = req.query.interface || null;
-
-        const rules = await getFirewallRules(interfaceId);
-
-        res.json({ rules });
-
-    } catch (err) {
-        next(err);
+        const rules = await firewallService.getFirewallRules();
+        res.json({ success: true, rules });
+    } catch (error) {
+        sendError(res, error);
     }
 });
 
-// Add rule
-router.post("/rules", async (req, res) => {
+router.post("/", async (req, res) => {
     try {
-        const rule = await addFirewallRule(req.body);
-
-        res.status(201).json({
-            message: "Rule created successfully",
-            rule
-        });
-
-    } catch (err) {
-        res.status(400).json({
-            error: err.message
-        });
-    }
-});
-
-// Update rule
-router.put("/rules/:id", async (req, res) => {
-    try {
-        const rule = await updateFirewallRule(
-            req.params.id,
-            req.body
+        const rule = await firewallService.runFirewallTransaction(
+            () => firewallService.addFirewallRule(req.body)
         );
-
-        res.json({
-            message: "Rule updated successfully",
-            rule
-        });
-
-    } catch (err) {
-        res.status(400).json({
-            error: err.message
-        });
+        res.status(201).json({ success: true, message: "Firewall rule added and applied", rule });
+    } catch (error) {
+        sendError(res, error);
     }
 });
 
-// Delete rule
-router.delete("/rules/:id", async (req, res) => {
+// Keep this route before /:id so "reorder" is not treated as a rule ID.
+router.put("/reorder", async (req, res) => {
     try {
-        await deleteFirewallRule(req.params.id);
-
-        res.json({
-            message: "Rule deleted successfully"
-        });
-
-    } catch (err) {
-        res.status(400).json({
-            error: err.message
-        });
-    }
-});
-
-// Toggle rule
-router.patch("/rules/:id/toggle", async (req, res) => {
-    try {
-        const rule = await toggleFirewallRule(
-            req.params.id
+        const rules = await firewallService.runFirewallTransaction(
+            () => firewallService.reorderFirewallRules(req.body.ids)
         );
-
-        res.json({
-            message: "Rule status updated",
-            rule
-        });
-
-    } catch (err) {
-        res.status(400).json({
-            error: err.message
-        });
+        res.json({ success: true, message: "Firewall rule order updated", rules });
+    } catch (error) {
+        sendError(res, error);
     }
 });
 
-// Reorder rules
-router.put("/rules/order", async (req, res) => {
+router.put("/:id", async (req, res) => {
     try {
-        const rules = await reorderFirewallRules(
-            req.body.ids
+        const rule = await firewallService.runFirewallTransaction(
+            () => firewallService.updateFirewallRule(req.params.id, req.body)
         );
+        res.json({ success: true, message: "Firewall rule updated and applied", rule });
+    } catch (error) {
+        sendError(res, error);
+    }
+});
 
-        res.json({
-            message: "Rule order updated",
-            rules
-        });
+router.delete("/:id", async (req, res) => {
+    try {
+        await firewallService.runFirewallTransaction(
+            () => firewallService.deleteFirewallRule(req.params.id)
+        );
+        res.json({ success: true, message: "Firewall rule deleted and applied" });
+    } catch (error) {
+        sendError(res, error);
+    }
+});
 
-    } catch (err) {
-        res.status(400).json({
-            error: err.message
-        });
+router.patch("/:id/toggle", async (req, res) => {
+    try {
+        const rule = await firewallService.runFirewallTransaction(
+            () => firewallService.toggleFirewallRule(req.params.id)
+        );
+        res.json({ success: true, message: "Firewall rule status updated and applied", rule });
+    } catch (error) {
+        sendError(res, error);
+    }
+});
+
+// Manual re-apply, useful after interface changes or external firewall edits.
+router.post("/apply", async (req, res) => {
+    try {
+        const result = await applyFirewallRules();
+        res.json({ success: true, message: result.message || "Firewall rules applied" });
+    } catch (error) {
+        sendError(res, error);
     }
 });
 

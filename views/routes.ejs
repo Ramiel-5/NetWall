@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>NetWall - Routing Table</title>
+
+    <link rel="stylesheet" href="/css/style.css">
+</head>
+
+<body>
+
+    <%- include('partials/sidebar') %>
+
+    <main class="content">
+
+        <div class="page-header">
+            <div>
+                <h1>Routing Table</h1>
+                <p>Routing / Routes</p>
+            </div>
+        </div>
+
+        <div class="route-summary">
+            <span>Total Routes: </span>
+            <strong id="route-count">0</strong>
+        </div>
+
+        <div class="table-container">
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Destination</th>
+                        <th>Gateway</th>
+                        <th>Flags</th>
+                        <th>Use</th>
+                        <th>MTU</th>
+                        <th>Netif</th>
+                        <th>Expire</th>
+                    </tr>
+                </thead>
+
+                <tbody id="route-table-body">
+                    <tr>
+                        <td colspan="7">Loading...</td>
+                    </tr>
+                </tbody>
+            </table>
+
+        </div>
+
+        <p id="route-status"></p>
+
+    </main>
+
+    <script src="/js/route.js"></script>
+
+</body>
+</html>
