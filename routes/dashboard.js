@@ -20,51 +20,50 @@ function formatUptime(seconds) {
 
 function getInterfaceStatus(name) {
     if (process.platform !== "linux") {
-        return "Unknown";
+        return "unknown";
     }
 
     try {
-        const statusPath = path.join(
-            "/sys/class/net",
-            name,
-            "operstate"
-        );
-
-        return fs.readFileSync(statusPath, "utf8").trim();
+        const statusPath = path.join("/sys/class/net", name, "operstate");
+        const status = fs.readFileSync(statusPath, "utf8").trim().toLowerCase();
+        return status || "unknown";
     } catch {
-        return "Unknown";
+        return "unknown";
     }
 }
 
-function getDashboardData() {
-    const interfaces = getInterfaces() || {};
-    const assignments = readAssignments() || {};
+async function getDashboardData() {
+    const physicalInterfaces = getInterfaces() || {};
+    const assignmentConfig = await readAssignments();
+    const assignments = Array.isArray(assignmentConfig.interfaces)
+        ? assignmentConfig.interfaces
+        : [];
 
-    const interfaceList = Object.entries(assignments)
-        .filter(([logical, physical]) => {
-            return physical && interfaces[physical];
-        })
-        .map(([logical, physical]) => {
-            const addresses = interfaces[physical] || [];
+    // Keep every configured logical interface visible, including unassigned ones.
+    const interfaceList = assignments.map(item => {
+        const physical = typeof item.nic === "string" ? item.nic.trim() : "";
+        const addresses = physicalInterfaces[physical] || [];
+        const firstAddress = addresses[0] || {};
 
-            return {
-                logical,
-                physical,
-                status: getInterfaceStatus(physical),
-                addresses: addresses
-                    .filter(address => !address.internal)
-                    .map(address => ({
-                        address: address.address,
-                        family: address.family,
-                        cidr: address.cidr
-                    }))
-            };
-        });
+        return {
+            logical: item.name || item.id || "Unknown",
+            id: item.id || "",
+            physical,
+            status: physical ? getInterfaceStatus(physical) : "unassigned",
+            mac: firstAddress.mac || "-",
+            addresses: addresses
+                .filter(address => !address.internal)
+                .map(address => ({
+                    address: address.address,
+                    family: address.family,
+                    cidr: address.cidr
+                }))
+        };
+    });
 
     const totalMemory = os.totalmem();
     const freeMemory = os.freemem();
-    const usedMemory = totalMemory - freeMemory;
-
+    const usedMemory = Math.max(0, totalMemory - freeMemory);
     const cpuList = os.cpus();
 
     return {
@@ -74,9 +73,7 @@ function getDashboardData() {
             architecture: os.arch(),
             uptime: formatUptime(os.uptime())
         },
-
         interfaces: interfaceList,
-
         resources: {
             cpuCores: cpuList.length,
             loadAverage: os.loadavg(),
@@ -84,7 +81,7 @@ function getDashboardData() {
             usedMemory,
             freeMemory,
             memoryUsage: totalMemory
-                ? ((usedMemory / totalMemory) * 100).toFixed(1)
+                ? Number(((usedMemory / totalMemory) * 100).toFixed(1))
                 : 0
         }
     };
@@ -96,11 +93,14 @@ router.get("/", (req, res) => {
     });
 });
 
-router.get("/data", (req, res) => {
+router.get("/data", async (req, res) => {
     try {
+        const data = await getDashboardData();
+
+        res.set("Cache-Control", "no-store");
         res.json({
             success: true,
-            data: getDashboardData()
+            data
         });
     } catch (error) {
         console.error("Dashboard error:", error);

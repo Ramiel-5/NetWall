@@ -1,118 +1,106 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
     <title>Dashboard - NetWall</title>
-
     <link rel="stylesheet" href="/css/style.css">
 </head>
-
 <body>
-
     <%- include("partials/sidebar", { activePage: "dashboard" }) %>
 
-    <main class="content">
-        <div class="page-header">
+    <main class="content dashboard-page">
+        <header class="page-header">
             <div>
                 <h1>Dashboard</h1>
                 <p>System overview</p>
             </div>
-
-            <button id="refresh-button" class="refresh-button">
-                Refresh
+            <button id="refresh-button" class="refresh-button" type="button">
+                <span aria-hidden="true">&#8635;</span> Refresh
             </button>
-        </div>
+        </header>
 
-        <!-- System Information -->
-        <section class="dashboard-section">
-            <h2>System Information</h2>
-
-            <div class="dashboard-info-grid">
-
-                <div class="dashboard-card">
+        <section class="dashboard-section" aria-labelledby="system-heading">
+            <div class="dashboard-section-heading">
+                <h2 id="system-heading">System Information</h2>
+            </div>
+            <div class="dashboard-info-grid system-info-grid">
+                <article class="dashboard-card">
                     <span class="dashboard-label">Hostname</span>
-                    <strong id="hostname">Loading...</strong>
-                </div>
-
-                <div class="dashboard-card">
+                    <strong id="hostname" class="dashboard-value">Loading...</strong>
+                </article>
+                <article class="dashboard-card">
                     <span class="dashboard-label">Operating System</span>
-                    <strong id="operating-system">Loading...</strong>
-                </div>
-
-                <div class="dashboard-card">
+                    <strong id="operating-system" class="dashboard-value">Loading...</strong>
+                </article>
+                <article class="dashboard-card">
                     <span class="dashboard-label">Architecture</span>
-                    <strong id="architecture">Loading...</strong>
-                </div>
-
-                <div class="dashboard-card">
+                    <strong id="architecture" class="dashboard-value">Loading...</strong>
+                </article>
+                <article class="dashboard-card">
                     <span class="dashboard-label">System Uptime</span>
-                    <strong id="uptime">Loading...</strong>
-                </div>
-
+                    <strong id="uptime" class="dashboard-value">Loading...</strong>
+                </article>
             </div>
         </section>
 
-        <!-- Interfaces -->
-        <section class="dashboard-section">
-            <h2>Interfaces</h2>
-
+        <section class="dashboard-section" aria-labelledby="interfaces-heading">
+            <div class="dashboard-section-heading">
+                <div>
+                    <h2 id="interfaces-heading">Interfaces</h2>
+                    <p>Logical interfaces and their assigned network ports</p>
+                </div>
+                <span id="interface-count" class="dashboard-count">- interfaces</span>
+            </div>
             <div class="dashboard-table-container">
                 <table class="dashboard-table">
                     <thead>
                         <tr>
-                            <th>Interface</th>
+                            <th>Logical Interface</th>
                             <th>Network Port</th>
                             <th>IP Address</th>
+                            <th>MAC Address</th>
                             <th>Status</th>
                         </tr>
                     </thead>
-
                     <tbody id="interface-table-body">
-                        <tr>
-                            <td colspan="4">Loading...</td>
-                        </tr>
+                        <tr><td colspan="5" class="dashboard-empty">Loading interfaces...</td></tr>
                     </tbody>
                 </table>
             </div>
         </section>
 
-        <!-- System Resources -->
-        <section class="dashboard-section">
-            <h2>System Resources</h2>
-
-            <div class="dashboard-info-grid">
-
-                <div class="dashboard-card">
+        <section class="dashboard-section" aria-labelledby="resources-heading">
+            <div class="dashboard-section-heading">
+                <h2 id="resources-heading">System Resources</h2>
+            </div>
+            <div class="dashboard-info-grid resource-info-grid">
+                <article class="dashboard-card">
                     <span class="dashboard-label">CPU Cores</span>
-                    <strong id="cpu-cores">-</strong>
-                </div>
-
-                <div class="dashboard-card">
-                    <span class="dashboard-label">Memory Usage</span>
-                    <strong id="memory-usage">-</strong>
-
-                    <div class="resource-progress">
+                    <strong id="cpu-cores" class="dashboard-value">-</strong>
+                    <small class="dashboard-description">Logical processor count</small>
+                </article>
+                <article class="dashboard-card memory-card">
+                    <div class="memory-heading">
+                        <span class="dashboard-label">Memory Usage</span>
+                        <strong id="memory-usage" class="dashboard-value">-</strong>
+                    </div>
+                    <div class="resource-progress" role="progressbar" aria-label="Memory usage" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" id="memory-progress-track">
                         <div id="memory-progress"></div>
                     </div>
-
-                    <small id="memory-detail">-</small>
-                </div>
-
-                <div class="dashboard-card">
-                    <span class="dashboard-label">System Load (1 min)</span>
-                    <strong id="load-average">-</strong>
-                </div>
-
+                    <small id="memory-detail" class="dashboard-description">-</small>
+                </article>
+                <article class="dashboard-card">
+                    <span class="dashboard-label">System Load (1 / 5 / 15 min)</span>
+                    <strong id="load-average" class="dashboard-value">-</strong>
+                    <small class="dashboard-description">Load average</small>
+                </article>
             </div>
         </section>
 
-        <p id="dashboard-status" class="dashboard-status"></p>
+        <p id="dashboard-status" class="dashboard-status" role="status" aria-live="polite">Waiting for system data...</p>
     </main>
 
-    <script src="/js/dashboard.js"></script>
-
+    <script src="/js/dashboard.js" defer></script>
 </body>
 </html>

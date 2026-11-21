@@ -1,143 +1,145 @@
-const hostname = document.getElementById("hostname");
-const operatingSystem = document.getElementById("operating-system");
-const architecture = document.getElementById("architecture");
-const uptime = document.getElementById("uptime");
+(() => {
+    const elements = {
+        hostname: document.getElementById("hostname"),
+        operatingSystem: document.getElementById("operating-system"),
+        architecture: document.getElementById("architecture"),
+        uptime: document.getElementById("uptime"),
+        interfaceTableBody: document.getElementById("interface-table-body"),
+        interfaceCount: document.getElementById("interface-count"),
+        cpuCores: document.getElementById("cpu-cores"),
+        memoryUsage: document.getElementById("memory-usage"),
+        memoryProgress: document.getElementById("memory-progress"),
+        memoryProgressTrack: document.getElementById("memory-progress-track"),
+        memoryDetail: document.getElementById("memory-detail"),
+        loadAverage: document.getElementById("load-average"),
+        dashboardStatus: document.getElementById("dashboard-status"),
+        refreshButton: document.getElementById("refresh-button")
+    };
 
-const interfaceTableBody = document.getElementById("interface-table-body");
+    let isLoading = false;
 
-const cpuCores = document.getElementById("cpu-cores");
-const memoryUsage = document.getElementById("memory-usage");
-const memoryProgress = document.getElementById("memory-progress");
-const memoryDetail = document.getElementById("memory-detail");
-const loadAverage = document.getElementById("load-average");
+    function formatBytes(bytes) {
+        if (!Number.isFinite(bytes) || bytes < 0) return "-";
+        if (bytes === 0) return "0 B";
 
-const dashboardStatus = document.getElementById("dashboard-status");
-const refreshButton = document.getElementById("refresh-button");
-
-function formatBytes(bytes) {
-    if (bytes === 0) return "0 B";
-
-    const units = ["B", "KB", "MB", "GB", "TB"];
-    const index = Math.floor(Math.log(bytes) / Math.log(1024));
-
-    return `${(bytes / Math.pow(1024, index)).toFixed(2)} ${units[index]}`;
-}
-
-function renderInterfaces(interfaces) {
-    interfaceTableBody.replaceChildren();
-
-    if (!interfaces || interfaces.length === 0) {
-        const row = document.createElement("tr");
-        const cell = document.createElement("td");
-
-        cell.colSpan = 4;
-        cell.textContent = "No assigned interfaces found.";
-
-        row.appendChild(cell);
-        interfaceTableBody.appendChild(row);
-
-        return;
-    }
-
-    interfaces.forEach(item => {
-        const row = document.createElement("tr");
-
-        const logicalCell = document.createElement("td");
-        const physicalCell = document.createElement("td");
-        const addressCell = document.createElement("td");
-        const statusCell = document.createElement("td");
-
-        logicalCell.textContent = item.logical;
-        physicalCell.textContent = item.physical;
-
-        const addresses = item.addresses || [];
-
-        addressCell.textContent = addresses.length
-            ? addresses.map(address =>
-                `${address.family}: ${address.address}`
-            ).join(", ")
-            : "No IP address";
-
-        statusCell.textContent = item.status;
-
-        statusCell.className =
-            item.status === "up"
-                ? "interface-status up"
-                : "interface-status down";
-
-        row.append(
-            logicalCell,
-            physicalCell,
-            addressCell,
-            statusCell
+        const units = ["B", "KB", "MB", "GB", "TB"];
+        const index = Math.min(
+            Math.floor(Math.log(bytes) / Math.log(1024)),
+            units.length - 1
         );
 
-        interfaceTableBody.appendChild(row);
-    });
-}
-
-function renderSystem(system) {
-    hostname.textContent = system.hostname;
-    operatingSystem.textContent = system.operatingSystem;
-    architecture.textContent = system.architecture;
-    uptime.textContent = system.uptime;
-}
-
-function renderResources(resources) {
-    cpuCores.textContent = resources.cpuCores;
-
-    memoryUsage.textContent = `${resources.memoryUsage}%`;
-
-    memoryProgress.style.width = `${resources.memoryUsage}%`;
-
-    memoryDetail.textContent =
-        `${formatBytes(resources.usedMemory)} / ${formatBytes(resources.totalMemory)}`;
-
-    loadAverage.textContent =
-        resources.loadAverage
-            .map(value => value.toFixed(2))
-            .join(" / ");
-}
-
-async function loadDashboard() {
-    try {
-        refreshButton.disabled = true;
-        dashboardStatus.textContent = "Updating dashboard...";
-
-        const response = await fetch("/data");
-
-        if (!response.ok) {
-            throw new Error(`HTTP error: ${response.status}`);
-        }
-
-        const result = await response.json();
-
-        if (!result.success) {
-            throw new Error(result.message || "Unable to load dashboard");
-        }
-
-        const data = result.data;
-
-        renderSystem(data.system);
-        renderInterfaces(data.interfaces);
-        renderResources(data.resources);
-
-        dashboardStatus.textContent =
-            `Last updated: ${new Date().toLocaleTimeString()}`;
-
-    } catch (error) {
-        console.error("Dashboard error:", error);
-
-        dashboardStatus.textContent =
-            "Failed to load dashboard data.";
-
-    } finally {
-        refreshButton.disabled = false;
+        return `${(bytes / Math.pow(1024, index)).toFixed(2)} ${units[index]}`;
     }
-}
 
-refreshButton.addEventListener("click", loadDashboard);
+    function createCell(text, className = "") {
+        const cell = document.createElement("td");
+        cell.textContent = text;
+        if (className) cell.className = className;
+        return cell;
+    }
 
-loadDashboard();
+    function renderInterfaces(interfaces) {
+        const rows = Array.isArray(interfaces) ? interfaces : [];
+        elements.interfaceTableBody.replaceChildren();
+        elements.interfaceCount.textContent = `${rows.length} interface${rows.length === 1 ? "" : "s"}`;
 
-setInterval(loadDashboard, 15000);
+        if (rows.length === 0) {
+            const row = document.createElement("tr");
+            const cell = createCell("No logical interfaces configured.", "dashboard-empty");
+            cell.colSpan = 5;
+            row.appendChild(cell);
+            elements.interfaceTableBody.appendChild(row);
+            return;
+        }
+
+        rows.forEach(item => {
+            const row = document.createElement("tr");
+            const addressList = Array.isArray(item.addresses) ? item.addresses : [];
+            const addressText = addressList.length
+                ? addressList.map(address => `${address.address} (${address.family})`).join(
+                    ", "
+                )
+                : (item.physical ? "No IP address" : "Not assigned");
+
+            row.append(
+                createCell(item.logical || item.id || "Unknown"),
+                createCell(item.physical || "Not assigned"),
+                createCell(addressText),
+                createCell(item.mac || "-"),
+                createCell(
+                    item.status || "unknown",
+                    `interface-status ${item.status === "up" ? "up" : item.status === "unassigned" ? "unassigned" : "down"}`
+                )
+            );
+
+            elements.interfaceTableBody.appendChild(row);
+        });
+    }
+
+    function renderSystem(system) {
+        elements.hostname.textContent = system.hostname || "-";
+        elements.operatingSystem.textContent = system.operatingSystem || "-";
+        elements.architecture.textContent = system.architecture || "-";
+        elements.uptime.textContent = system.uptime || "-";
+    }
+
+    function renderResources(resources) {
+        const usage = Math.min(100, Math.max(0, Number(resources.memoryUsage) || 0));
+
+        elements.cpuCores.textContent = resources.cpuCores ?? "-";
+        elements.memoryUsage.textContent = `${usage.toFixed(1)}%`;
+        elements.memoryProgress.style.width = `${usage}%`;
+        elements.memoryProgressTrack.setAttribute("aria-valuenow", String(usage));
+        elements.memoryDetail.textContent =
+            `${formatBytes(resources.usedMemory)} used / ${formatBytes(resources.totalMemory)} total`;
+
+        const load = Array.isArray(resources.loadAverage) ? resources.loadAverage : [];
+        elements.loadAverage.textContent = load.length
+            ? load.map(value => Number(value).toFixed(2)).join(" / ")
+            : "Unavailable";
+    }
+
+    async function loadDashboard() {
+        if (isLoading) return;
+        isLoading = true;
+        elements.refreshButton.disabled = true;
+        elements.refreshButton.classList.add("is-loading");
+        elements.dashboardStatus.textContent = "Updating dashboard...";
+
+        try {
+            const response = await fetch("/data", {
+                method: "GET",
+                cache: "no-store",
+                headers: { Accept: "application/json" }
+            });
+
+            if (!response.ok) {
+                throw new Error(`Server returned HTTP ${response.status}`);
+            }
+
+            const result = await response.json();
+            if (!result.success || !result.data) {
+                throw new Error(result.message || "Invalid dashboard response");
+            }
+
+            renderSystem(result.data.system || {});
+            renderInterfaces(result.data.interfaces);
+            renderResources(result.data.resources || {});
+
+            elements.dashboardStatus.textContent =
+                `Last updated: ${new Date().toLocaleTimeString()}`;
+        } catch (error) {
+            console.error("Dashboard error:", error);
+            elements.dashboardStatus.textContent =
+                `Unable to update dashboard: ${error.message}`;
+        } finally {
+            isLoading = false;
+            elements.refreshButton.disabled = false;
+            elements.refreshButton.classList.remove("is-loading");
+        }
+    }
+
+    elements.refreshButton.addEventListener("click", loadDashboard);
+    loadDashboard();
+    window.setInterval(loadDashboard, 15000);
+})();
