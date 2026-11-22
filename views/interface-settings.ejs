@@ -207,6 +207,102 @@
                     </div>
 
                 </section>
+                <!-- IPv6 Configuration -->
+<section class="config-container">
+
+    <div class="config-header">
+        IPv6 Configuration
+    </div>
+
+    <!-- DHCPv6 -->
+    <div class="config-row">
+
+        <label for="dhcp6" class="config-label">
+            DHCPv6
+        </label>
+
+        <div class="config-field">
+
+            <label class="checkbox-label">
+                <input
+                    type="checkbox"
+                    id="dhcp6"
+                    name="dhcp6"
+                    <%= interfaceItem.dhcp6 ? "checked" : "" %>
+                >
+
+                Enable DHCPv6
+            </label>
+
+            <small>
+                Obtain IPv6 configuration through DHCPv6.
+            </small>
+
+        </div>
+
+    </div>
+
+    <!-- Accept RA -->
+    <div class="config-row">
+
+        <label for="acceptRa" class="config-label">
+            Accept RA
+        </label>
+
+        <div class="config-field">
+
+            <label class="checkbox-label">
+                <input
+                    type="checkbox"
+                    id="acceptRa"
+                    name="acceptRa"
+                    <%= interfaceItem.acceptRa ? "checked" : "" %>
+                >
+
+                Accept Router Advertisements
+            </label>
+
+            <small>
+                Allow this interface to receive IPv6 Router Advertisements.
+            </small>
+
+        </div>
+
+    </div>
+
+</section>
+
+<!-- DNS Configuration -->
+<section class="config-container">
+
+    <div class="config-header">
+        DNS Configuration
+    </div>
+
+    <div class="config-row">
+
+        <label for="dns" class="config-label">
+            DNS Servers
+        </label>
+
+        <div class="config-field">
+
+            <textarea
+                id="dns"
+                name="dns"
+                rows="3"
+                placeholder="8.8.8.8&#10;1.1.1.1"
+            ><%= Array.isArray(interfaceItem.dns) ? interfaceItem.dns.join("\n") : "" %></textarea>
+
+            <small>
+                Enter one DNS server IP address per line.
+            </small>
+
+        </div>
+
+    </div>
+
+</section>
 
                 <!-- Interface Information -->
                 <section class="config-container">

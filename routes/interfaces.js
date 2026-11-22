@@ -1,3 +1,4 @@
+
 const express = require("express");
 const net = require("net");
 
@@ -20,9 +21,7 @@ router.get("/", (req, res) => {
 router.get("/ports", (req, res, next) => {
     try {
         const interfaces = getInterfaces();
-
         res.json({ interfaces });
-
     } catch (error) {
         next(error);
     }
@@ -36,7 +35,6 @@ router.get("/assignments", async (req, res, next) => {
         res.json({
             assignments: data.interfaces
         });
-
     } catch (error) {
         next(error);
     }
@@ -54,14 +52,10 @@ router.put("/assignments", async (req, res, next) => {
         }
 
         const availableNics = Object.keys(getInterfaces());
-
         const previousConfig = await readAssignments();
 
         const previousById = new Map(
-            previousConfig.interfaces.map(item => [
-                item.id,
-                item
-            ])
+            previousConfig.interfaces.map(item => [item.id, item])
         );
 
         const normalized = [];
@@ -82,14 +76,12 @@ router.put("/assignments", async (req, res, next) => {
             const name = item.name.trim();
             const nic = item.nic.trim();
 
-            // Validate interface ID
             if (!/^(WAN|LAN|OPT[1-9]\d*)$/.test(id)) {
                 return res.status(400).json({
                     error: `Invalid interface ID: ${id}`
                 });
             }
 
-            // Validate name
             if (!name) {
                 return res.status(400).json({
                     error: "Interface name cannot be empty"
@@ -102,7 +94,6 @@ router.put("/assignments", async (req, res, next) => {
                 });
             }
 
-            // Validate NIC
             if (nic && !availableNics.includes(nic)) {
                 return res.status(400).json({
                     error: `NIC ${nic} is unavailable`
@@ -119,6 +110,20 @@ router.put("/assignments", async (req, res, next) => {
             });
         }
 
+        // WAN must always exist
+        if (!normalized.some(item => item.id === "WAN")) {
+            return res.status(400).json({
+                error: "WAN interface cannot be deleted"
+            });
+        }
+
+        // Logical interfaces cannot exceed physical interfaces
+        if (normalized.length > availableNics.length) {
+            return res.status(400).json({
+                error: "Logical interface count cannot exceed physical interface count"
+            });
+        }
+
         // Check duplicate IDs
         const ids = normalized.map(item => item.id);
 
@@ -128,10 +133,8 @@ router.put("/assignments", async (req, res, next) => {
             });
         }
 
-        // Check duplicate names
-        const names = normalized.map(
-            item => item.name.toLowerCase()
-        );
+        // Check duplicate descriptions
+        const names = normalized.map(item => item.name.toLowerCase());
 
         if (new Set(names).size !== names.length) {
             return res.status(400).json({
@@ -139,7 +142,7 @@ router.put("/assignments", async (req, res, next) => {
             });
         }
 
-        // Check duplicate NIC assignments
+        // Check duplicate physical NIC assignments
         const selectedNics = normalized
             .map(item => item.nic)
             .filter(Boolean);
@@ -202,31 +205,47 @@ router.put("/settings/:id", async (req, res, next) => {
 
         const body = req.body || {};
 
-        const name = typeof body.name === "string"
-            ? body.name.trim()
-            : "";
+        // General settings
+        const name =
+            typeof body.name === "string"
+                ? body.name.trim()
+                : "";
 
+        const enabled = body.enabled;
+
+        // IPv4 settings
         const ipv4Type = body.ipv4Type;
 
-        const ipv4Address = typeof body.ipv4Address === "string"
-            ? body.ipv4Address.trim()
-            : "";
+        const ipv4Address =
+            typeof body.ipv4Address === "string"
+                ? body.ipv4Address.trim()
+                : "";
 
-        const ipv4Gateway = typeof body.ipv4Gateway === "string"
-            ? body.ipv4Gateway.trim()
-            : "";
+        const ipv4Gateway =
+            typeof body.ipv4Gateway === "string"
+                ? body.ipv4Gateway.trim()
+                : "";
 
-        const ipv4Prefix = body.ipv4Prefix === "" ||
-            body.ipv4Prefix == null
-            ? null
-            : Number(body.ipv4Prefix);
+        const ipv4Prefix =
+            body.ipv4Prefix === "" || body.ipv4Prefix == null
+                ? null
+                : Number(body.ipv4Prefix);
 
-        const mtu = body.mtu === "" || body.mtu == null
-            ? null
-            : Number(body.mtu);
+        // MTU
+        const mtu =
+            body.mtu === "" || body.mtu == null
+                ? null
+                : Number(body.mtu);
+
+        // IPv6 settings
+        const dhcp6 = body.dhcp6;
+        const acceptRa = body.acceptRa;
+
+        // DNS settings
+        const dns = body.dns;
 
         // Validate enabled
-        if (typeof body.enabled !== "boolean") {
+        if (typeof enabled !== "boolean") {
             return res.status(400).json({
                 error: "Invalid interface enabled value"
             });
@@ -245,7 +264,7 @@ router.put("/settings/:id", async (req, res, next) => {
             });
         }
 
-        // Check duplicate descriptions
+        // Check duplicate description
         const duplicateName = data.interfaces.some(item =>
             item.id !== interfaceItem.id &&
             item.name.toLowerCase() === name.toLowerCase()
@@ -258,7 +277,11 @@ router.put("/settings/:id", async (req, res, next) => {
         }
 
         // Validate IPv4 type
-        const allowedIpv4Types = ["none", "dhcp", "static"];
+        const allowedIpv4Types = [
+            "none",
+            "dhcp",
+            "static"
+        ];
 
         if (!allowedIpv4Types.includes(ipv4Type)) {
             return res.status(400).json({
@@ -266,17 +289,7 @@ router.put("/settings/:id", async (req, res, next) => {
             });
         }
 
-        // Validate MTU
-        if (
-            mtu !== null &&
-            (!Number.isInteger(mtu) || mtu < 576 || mtu > 9000)
-        ) {
-            return res.status(400).json({
-                error: "MTU must be between 576 and 9000"
-            });
-        }
-
-        // Validate static IPv4
+        // Validate IPv4 static configuration
         if (ipv4Type === "static") {
             if (!net.isIPv4(ipv4Address)) {
                 return res.status(400).json({
@@ -301,22 +314,94 @@ router.put("/settings/:id", async (req, res, next) => {
             }
         }
 
-        // Update interface settings
-        interfaceItem.enabled = body.enabled;
+        // Validate MTU
+        if (
+            mtu !== null &&
+            (!Number.isInteger(mtu) || mtu < 576 || mtu > 9000)
+        ) {
+            return res.status(400).json({
+                error: "MTU must be between 576 and 9000"
+            });
+        }
+
+        // Validate DHCPv6
+        if (typeof dhcp6 !== "boolean") {
+            return res.status(400).json({
+                error: "Invalid DHCPv6 value"
+            });
+        }
+
+        // Validate Accept RA
+        if (typeof acceptRa !== "boolean") {
+            return res.status(400).json({
+                error: "Invalid Accept RA value"
+            });
+        }
+
+        // Validate DNS
+        if (!Array.isArray(dns)) {
+            return res.status(400).json({
+                error: "DNS servers must be an array"
+            });
+        }
+
+        const normalizedDns = [];
+
+        for (const address of dns) {
+            if (typeof address !== "string") {
+                return res.status(400).json({
+                    error: "Invalid DNS server address"
+                });
+            }
+
+            const trimmedAddress = address.trim();
+
+            if (!trimmedAddress) {
+                continue;
+            }
+
+            if (net.isIP(trimmedAddress) === 0) {
+                return res.status(400).json({
+                    error: `Invalid DNS server address: ${trimmedAddress}`
+                });
+            }
+
+            if (!normalizedDns.includes(trimmedAddress)) {
+                normalizedDns.push(trimmedAddress);
+            }
+        }
+
+        // Update interface configuration
+        interfaceItem.enabled = enabled;
+
         interfaceItem.name = name;
+
         interfaceItem.ipv4Type = ipv4Type;
 
         interfaceItem.ipv4Address =
-            ipv4Type === "static" ? ipv4Address : "";
+            ipv4Type === "static"
+                ? ipv4Address
+                : "";
 
         interfaceItem.ipv4Prefix =
-            ipv4Type === "static" ? ipv4Prefix : null;
+            ipv4Type === "static"
+                ? ipv4Prefix
+                : null;
 
         interfaceItem.ipv4Gateway =
-            ipv4Type === "static" ? ipv4Gateway : "";
+            ipv4Type === "static"
+                ? ipv4Gateway
+                : "";
 
         interfaceItem.mtu = mtu;
 
+        interfaceItem.dhcp6 = dhcp6;
+
+        interfaceItem.acceptRa = acceptRa;
+
+        interfaceItem.dns = normalizedDns;
+
+        // Save configuration to JSON
         await saveAssignments(data.interfaces);
 
         res.json({

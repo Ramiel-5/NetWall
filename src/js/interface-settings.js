@@ -1,15 +1,32 @@
 document.addEventListener("DOMContentLoaded", () => {
     const form = document.getElementById("interface-settings-form");
+
     const ipv4Type = document.getElementById("ipv4Type");
     const staticFields = document.getElementById("static-ipv4-fields");
+
     const status = document.getElementById("interface-settings-status");
+
+    const saveButton = form?.querySelector('button[type="submit"]');
 
     if (!form || !ipv4Type || !staticFields || !status) {
         console.error("Interface Settings: Required elements not found.");
         return;
     }
 
-    const saveButton = form.querySelector('button[type="submit"]');
+    // Elements
+    const enabledInput = document.getElementById("enabled");
+    const nameInput = document.getElementById("name");
+
+    const ipv4AddressInput = document.getElementById("ipv4Address");
+    const ipv4PrefixInput = document.getElementById("ipv4Prefix");
+    const ipv4GatewayInput = document.getElementById("ipv4Gateway");
+
+    const mtuInput = document.getElementById("mtu");
+
+    const dhcp6Input = document.getElementById("dhcp6");
+    const acceptRaInput = document.getElementById("acceptRa");
+
+    const dnsInput = document.getElementById("dns");
 
     // Show or hide Static IPv4 fields
     function updateIpv4Fields() {
@@ -27,11 +44,27 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
-    // Listen for IPv4 configuration changes
     ipv4Type.addEventListener("change", updateIpv4Fields);
 
-    // Initialize form
     updateIpv4Fields();
+
+    // Parse DNS servers
+    function getDnsServers() {
+        if (!dnsInput) {
+            return [];
+        }
+
+        return dnsInput.value
+            .split(/[\n,]+/)
+            .map(address => address.trim())
+            .filter(Boolean);
+    }
+
+    // Display status
+    function showStatus(message, type = "") {
+        status.textContent = message;
+        status.className = `interface-settings-status ${type}`;
+    }
 
     // Save interface settings
     form.addEventListener("submit", async event => {
@@ -40,35 +73,39 @@ document.addEventListener("DOMContentLoaded", () => {
         const interfaceId = form.dataset.interfaceId;
 
         if (!interfaceId) {
-            status.textContent = "Interface ID is missing.";
-            status.className = "interface-settings-status error";
+            showStatus("Interface ID is missing.", "error");
             return;
         }
 
-        status.textContent = "Saving settings...";
-        status.className = "interface-settings-status";
+        const payload = {
+            enabled: enabledInput.checked,
+
+            name: nameInput.value.trim(),
+
+            ipv4Type: ipv4Type.value,
+
+            ipv4Address: ipv4AddressInput?.value.trim() || "",
+
+            ipv4Prefix: ipv4PrefixInput?.value || "",
+
+            ipv4Gateway: ipv4GatewayInput?.value.trim() || "",
+
+            mtu: mtuInput?.value || "",
+
+            // IPv6
+            dhcp6: dhcp6Input?.checked || false,
+
+            acceptRa: acceptRaInput?.checked || false,
+
+            // DNS
+            dns: getDnsServers()
+        };
+
+        showStatus("Saving settings...");
 
         if (saveButton) {
             saveButton.disabled = true;
         }
-
-        const formData = new FormData(form);
-
-        const payload = {
-            enabled: document.getElementById("enabled").checked,
-
-            name: formData.get("name"),
-
-            ipv4Type: formData.get("ipv4Type"),
-
-            ipv4Address: formData.get("ipv4Address") || "",
-
-            ipv4Prefix: formData.get("ipv4Prefix") || "",
-
-            ipv4Gateway: formData.get("ipv4Gateway") || "",
-
-            mtu: formData.get("mtu") || ""
-        };
 
         try {
             const response = await fetch(
@@ -94,17 +131,15 @@ document.addEventListener("DOMContentLoaded", () => {
                 );
             }
 
-            status.textContent =
-                result.message || "Settings saved successfully.";
-
-            status.className = "interface-settings-status success";
+            showStatus(
+                result.message || "Settings saved successfully.",
+                "success"
+            );
 
         } catch (error) {
             console.error("Interface Settings Error:", error);
 
-            status.textContent = error.message;
-
-            status.className = "interface-settings-status error";
+            showStatus(error.message, "error");
 
         } finally {
             if (saveButton) {
