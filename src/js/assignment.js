@@ -1,196 +1,322 @@
+const rows = document.getElementById("assignment-rows");
+const addButton = document.getElementById("add-button");
+const saveButton = document.getElementById("save-button");
+const statusElement = document.getElementById("status");
 
-let currentAssignments = [];
-let availableNics = {};
+// Physical interfaces from Ubuntu
+let networkInterfaces = {};
 
-// Load data
-async function loadInterfaces() {
-    try {
-        const [portsResponse, assignmentsResponse] = await Promise.all([
-            fetch("/interfaces/ports"),
-            fetch("/interfaces/assignments")
-        ]);
+// Logical interfaces from NetWall
+let interfaces = [];
 
-        if (!portsResponse.ok || !assignmentsResponse.ok) {
-            throw new Error("Failed to load interface data");
-        }
+// Show status
+function showStatus(message, type = "") {
+    statusElement.textContent = message;
+    statusElement.className = type;
+}
 
-        const portsData = await portsResponse.json();
-        const assignmentsData = await assignmentsResponse.json();
+// API request
+async function apiRequest(url, options = {}) {
+    const response = await fetch(url, options);
 
-        availableNics = portsData.interfaces;
-        currentAssignments = assignmentsData.assignments;
+    const data = await response.json();
 
-        renderInterfaces();
-
-    } catch (error) {
-        console.error("Load interfaces error:", error);
+    if (!response.ok) {
+        throw new Error(data.error || "Request failed");
     }
+
+    return data;
+}
+
+// Load physical interfaces
+async function loadNetworkInterfaces() {
+    const data = await apiRequest("/interfaces/ports");
+
+    networkInterfaces = data.interfaces || {};
+}
+
+// Load logical interfaces
+async function loadAssignments() {
+    const data = await apiRequest("/interfaces/assignments");
+
+    interfaces = data.assignments || [];
+
+    renderAssignments();
+}
+
+// Get next logical interface ID
+function getNextInterfaceId() {
+
+    // Restore LAN if it does not exist
+    const hasLAN = interfaces.some(
+        item => item.id === "LAN"
+    );
+
+    if (!hasLAN) {
+        return "LAN";
+    }
+
+    // Find smallest available OPT ID
+    let number = 1;
+
+    while (
+        interfaces.some(item => item.id === `OPT${number}`)
+    ) {
+        number++;
+    }
+
+    return `OPT${number}`;
 }
 
 // Update Add button
 function updateAddButton() {
-    const addButton = document.getElementById("add-button");
+    const physicalCount = Object.keys(networkInterfaces).length;
+    const logicalCount = interfaces.length;
 
-    const maxInterfaces = Object.keys(availableNics).length;
-
-    addButton.disabled =
-        currentAssignments.length >= maxInterfaces;
+    addButton.disabled = logicalCount >= physicalCount;
 }
 
-// Render interfaces
-function renderInterfaces() {
-    const tbody = document.getElementById("assignment-rows");
+// Render assignments
+function renderAssignments() {
+    rows.replaceChildren();
 
-    tbody.replaceChildren();
+    interfaces.forEach((item, index) => {
 
-    currentAssignments.forEach(item => {
-        const row = document.createElement("tr");
+        const tr = document.createElement("tr");
 
+        // Interface ID
         const interfaceCell = document.createElement("td");
+
+        interfaceCell.textContent = item.id;
+
+        // Description
+        const nameCell = document.createElement("td");
+
+        const nameInput = document.createElement("input");
+
+        nameInput.type = "text";
+        nameInput.value = item.name;
+        nameInput.maxLength = 40;
+
+        nameInput.addEventListener("input", () => {
+            interfaces[index].name = nameInput.value;
+        });
+
+        nameCell.appendChild(nameInput);
+
+        // Physical Network Port
         const portCell = document.createElement("td");
-        const actionCell = document.createElement("td");
 
-        // Interface name
-        const interfaceLink = document.createElement("a");
-
-        interfaceLink.textContent = item.name;
-        interfaceLink.href = `/interfaces/settings/${item.id}`;
-
-        interfaceCell.appendChild(interfaceLink);
-
-        // NIC dropdown
         const select = document.createElement("select");
 
-        select.className = "nic-select";
+        select.className = "interface-select";
 
-        const defaultOption = document.createElement("option");
+        // Empty option
+        const emptyOption = document.createElement("option");
 
-        defaultOption.value = "";
-        defaultOption.textContent = "-- Select NIC --";
+        emptyOption.value = "";
+        emptyOption.textContent = "-- Select Network Port --";
 
-        select.appendChild(defaultOption);
+        select.appendChild(emptyOption);
 
-        Object.keys(availableNics).forEach(nicName => {
+        // Available physical NICs
+        Object.keys(networkInterfaces).forEach(nic => {
+
             const option = document.createElement("option");
 
-            option.value = nicName;
-            option.textContent = nicName;
-            option.selected = item.nic === nicName;
+            option.value = nic;
+            option.textContent = nic;
 
             select.appendChild(option);
         });
 
+        // Restore previously selected NIC
+        select.value = item.nic || "";
+
+        // Update NIC selection
         select.addEventListener("change", () => {
-            item.nic = select.value;
-            renderInterfaces();
+            interfaces[index].nic = select.value;
         });
 
         portCell.appendChild(select);
 
-        // Delete button: WAN cannot be deleted
+        // Action
+        const actionCell = document.createElement("td");
+
+        // WAN cannot be deleted
         if (item.id !== "WAN") {
+
             const deleteButton = document.createElement("button");
 
+            deleteButton.type = "button";
             deleteButton.textContent = "Delete";
 
             deleteButton.addEventListener("click", () => {
-                if (!confirm(`Delete interface ${item.name}?`)) {
-                    return;
-                }
-
-                currentAssignments = currentAssignments.filter(
-                    other => other.id !== item.id
-                );
-
-                renderInterfaces();
+                deleteInterface(item.id);
             });
 
             actionCell.appendChild(deleteButton);
         }
 
-        row.append(interfaceCell, portCell, actionCell);
+        tr.append(
+            interfaceCell,
+            nameCell,
+            portCell,
+            actionCell
+        );
 
-        tbody.appendChild(row);
+        rows.appendChild(tr);
     });
 
+    // Update Add button
     updateAddButton();
 }
 
 // Add logical interface
-document.getElementById("add-button").addEventListener("click", () => {
-    const maxInterfaces = Object.keys(availableNics).length;
+function addInterface() {
 
-    if (currentAssignments.length >= maxInterfaces) {
+    const physicalCount = Object.keys(networkInterfaces).length;
+
+    if (interfaces.length >= physicalCount) {
+
+        showStatus(
+            "Maximum number of logical interfaces reached.",
+            "error"
+        );
+
         return;
     }
 
-    const usedIds = currentAssignments.map(item => item.id);
+    const id = getNextInterfaceId();
 
-    let number = 1;
-
-    while (usedIds.includes(`OPT${number}`)) {
-        number++;
-    }
-
-    currentAssignments.push({
-        id: `OPT${number}`,
-        name: `OPT${number}`,
+    interfaces.push({
+        id: id,
+        name: id,
         nic: ""
     });
 
-    renderInterfaces();
-});
+    renderAssignments();
+
+    showStatus(`${id} interface added.`, "success");
+}
+
+// Delete logical interface
+function deleteInterface(id) {
+
+    // Protect WAN
+    if (id === "WAN") {
+        return;
+    }
+
+    interfaces = interfaces.filter(
+        item => item.id !== id
+    );
+
+    renderAssignments();
+
+    showStatus(`${id} interface deleted.`, "success");
+}
+
+// Validate duplicate physical NICs before saving
+function validateAssignments() {
+
+    const selectedNics = interfaces
+        .map(item => item.nic)
+        .filter(nic => nic !== "");
+
+    const duplicatedNics = selectedNics.filter(
+        (nic, index) => selectedNics.indexOf(nic) !== index
+    );
+
+    if (duplicatedNics.length > 0) {
+
+        return {
+            valid: false,
+            message: `Physical interface ${duplicatedNics[0]} is assigned more than once.`
+        };
+    }
+
+    return {
+        valid: true
+    };
+}
 
 // Save assignments
-document.getElementById("save-button").addEventListener("click", async () => {
+async function saveAssignments() {
+
+    // Validate before sending request
+    const validation = validateAssignments();
+
+    if (!validation.valid) {
+
+        showStatus(validation.message, "error");
+
+        return;
+    }
+
     try {
-        // Check duplicate NICs
-        const assignedNics = currentAssignments
-            .map(item => item.nic)
-            .filter(nic => nic !== "");
 
-        if (new Set(assignedNics).size !== assignedNics.length) {
-            throw new Error(
-                "A NIC cannot be assigned to multiple logical interfaces."
-            );
-        }
+        saveButton.disabled = true;
 
-        // Check WAN existence
-        if (!currentAssignments.some(item => item.id === "WAN")) {
-            throw new Error("WAN interface cannot be deleted.");
-        }
+        showStatus("Saving assignments...");
 
-        // Save data
-        const response = await fetch("/interfaces/assignments", {
-            method: "PUT",
+        const data = await apiRequest(
+            "/interfaces/assignments",
+            {
+                method: "PUT",
 
-            headers: {
-                "Content-Type": "application/json"
-            },
+                headers: {
+                    "Content-Type": "application/json"
+                },
 
-            body: JSON.stringify({
-                interfaces: currentAssignments
-            })
-        });
+                body: JSON.stringify({
+                    interfaces
+                })
+            }
+        );
 
-        if (!response.ok) {
-            const result = await response.json();
-
-            throw new Error(
-                result.error || "Failed to save assignments"
-            );
-        }
-
-        document.getElementById("status").textContent =
-            "Saved successfully.";
+        showStatus(
+            data.message || "Assignments saved successfully.",
+            "success"
+        );
 
     } catch (error) {
-        console.error("Save error:", error);
 
-        document.getElementById("status").textContent =
-            error.message;
+        showStatus(error.message, "error");
+
+    } finally {
+
+        saveButton.disabled = false;
     }
-});
+}
 
-// Initial load
-loadInterfaces();
+// Event listeners
+addButton.addEventListener("click", addInterface);
+
+saveButton.addEventListener("click", saveAssignments);
+
+// Initialize
+async function initialize() {
+
+    try {
+
+        addButton.disabled = true;
+        saveButton.disabled = true;
+
+        await loadNetworkInterfaces();
+
+        await loadAssignments();
+
+    } catch (error) {
+
+        showStatus(error.message, "error");
+
+    } finally {
+
+        updateAddButton();
+
+        saveButton.disabled = false;
+    }
+}
+
+initialize();

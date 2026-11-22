@@ -14,422 +14,275 @@
 
     <%- include('partials/sidebar', { activePage: 'interfaces' }) %>
 
-    <main class="content interface-settings-page">
+        <main class="content interface-settings-page">
 
-        <header class="interface-settings-breadcrumb">
-            <a href="/interfaces">Interfaces</a>
-            <span>/</span>
-            <span>
-                <%= interfaceItem.name %>
-                (<%= interfaceItem.nic || "Not assigned" %>)
-            </span>
-        </header>
+            <!-- Breadcrumb -->
+            <header class="interface-settings-breadcrumb">
+                <a href="/interfaces">Interfaces</a>
+                <span>/</span>
+                <span>
+                    <%= interfaceItem.name %>
+                        (<%= interfaceItem.nic || "Not assigned" %>)
+                </span>
+            </header>
 
-        <div class="interface-settings-heading">
-            <div>
-                <h1>Interface Settings</h1>
-                <p>Configure the properties of this logical interface.</p>
-            </div>
 
-            <span class="interface-id-badge">
-                <%= interfaceItem.id %>
-            </span>
-        </div>
+            <!-- Settings Form -->
+            <form id="interface-settings-form" data-interface-id="<%= interfaceItem.id %>">
 
-        <form
-            id="interface-settings-form"
-            data-interface-id="<%= interfaceItem.id %>"
-            data-nic="<%= interfaceItem.nic || '' %>">
+                <!-- General Configuration -->
+                <section class="config-container">
 
-            <!-- General Configuration -->
-
-            <section class="config-container">
-
-                <div class="config-header">
-                    General Configuration
-                </div>
-
-                <!-- Enable -->
-
-                <div class="config-row">
-
-                    <label for="enabled" class="config-label">
-                        Enable
-                    </label>
-
-                    <div class="config-field">
-
-                        <label class="checkbox-label">
-
-                            <input
-                                type="checkbox"
-                                id="enabled"
-                                name="enabled"
-                                <%= interfaceItem.enabled !== false ? "checked" : "" %>>
-
-                            Enable interface
-
-                        </label>
-
-                        <small>
-                            Enable or disable this logical interface in NetWall.
-                        </small>
-
+                    <div class="config-header">
+                        General Configuration
                     </div>
 
-                </div>
-
-                <!-- Description -->
-
-                <div class="config-row">
-
-                    <label for="name" class="config-label">
-                        Description
-                    </label>
-
-                    <div class="config-field">
-
-                        <input
-                            type="text"
-                            id="name"
-                            name="name"
-                            maxlength="40"
-                            required
-                            value="<%= interfaceItem.name || interfaceItem.id %>">
-
-                        <small>
-                            A unique display name for this logical interface.
-                        </small>
-
-                    </div>
-
-                </div>
-
-                <!-- IPv4 Configuration -->
-
-                <div class="config-row">
-
-                    <label for="ipv4Type" class="config-label">
-                        IPv4 Configuration Type
-                    </label>
-
-                    <div class="config-field">
-
-                        <select id="ipv4Type" name="ipv4Type">
-
-                            <option value="none"
-                                <%= interfaceItem.ipv4Type === "none" ? "selected" : "" %>>
-                                None
-                            </option>
-
-                            <option value="static"
-                                <%= interfaceItem.ipv4Type === "static" ? "selected" : "" %>>
-                                Static IPv4
-                            </option>
-
-                            <option value="dhcp"
-                                <%= !interfaceItem.ipv4Type || interfaceItem.ipv4Type === "dhcp" ? "selected" : "" %>>
-                                DHCP
-                            </option>
-
-                        </select>
-
-                        <small>
-                            Select how the IPv4 configuration should be defined.
-                        </small>
-
-                    </div>
-
-                </div>
-
-                <!-- Static IPv4 Fields -->
-
-                <div
-                    id="static-ipv4-fields"
-                    class="static-ipv4-fields"
-                    <%= interfaceItem.ipv4Type === "static" ? "" : "hidden" %>>
-
+                    <!-- Enable Interface -->
                     <div class="config-row">
 
-                        <label for="ipv4Address" class="config-label">
-                            IPv4 Address
+                        <label for="enabled" class="config-label">
+                            Enable
                         </label>
 
                         <div class="config-field">
 
-                            <input
-                                type="text"
-                                id="ipv4Address"
-                                name="ipv4Address"
-                                placeholder="192.168.10.1"
-                                value="<%= interfaceItem.ipv4Address || '' %>">
+                            <label class="checkbox-label">
+
+                                <input type="checkbox" id="enabled" name="enabled" <%=interfaceItem.enabled !==false
+                                    ? "checked" : "" %>>
+
+                                Enable interface
+
+                            </label>
+
+                        </div>
+
+                    </div>
+
+                    <!-- Description -->
+                    <div class="config-row">
+
+                        <label for="name" class="config-label">
+                            Description
+                        </label>
+
+                        <div class="config-field">
+
+                            <input type="text" id="name" name="name" maxlength="40" required
+                                value="<%= interfaceItem.name || interfaceItem.id %>">
 
                             <small>
-                                Static IPv4 address assigned to the interface.
+                                Enter a description (name) for the interface here.
                             </small>
 
                         </div>
 
                     </div>
 
+                    <!-- IPv4 Configuration Type -->
                     <div class="config-row">
 
-                        <label for="ipv4Prefix" class="config-label">
-                            Prefix Length
+                        <label for="ipv4Type" class="config-label">
+                            IPv4 Configuration Type
                         </label>
 
                         <div class="config-field">
 
-                            <input
-                                type="number"
-                                id="ipv4Prefix"
-                                name="ipv4Prefix"
-                                min="1"
-                                max="32"
-                                placeholder="24"
-                                value="<%= interfaceItem.ipv4Prefix ?? '' %>">
+                            <select id="ipv4Type" name="ipv4Type">
+
+                                <option value="none" <%=interfaceItem.ipv4Type==="none" ? "selected" : "" %>>
+                                    None
+                                </option>
+
+                                <option value="static" <%=interfaceItem.ipv4Type==="static" ? "selected" : "" %>>
+                                    Static IPv4
+                                </option>
+
+                                <option value="dhcp" <%=!interfaceItem.ipv4Type || interfaceItem.ipv4Type==="dhcp"
+                                    ? "selected" : "" %>>
+                                    DHCP
+                                </option>
+
+                            </select>
 
                             <small>
-                                IPv4 network prefix, from 1 to 32.
+                                Select how the IPv4 configuration should be defined.
                             </small>
 
                         </div>
 
                     </div>
 
+                    <!-- Static IPv4 Configuration -->
+                    <div id="static-ipv4-fields" class="static-ipv4-fields" <%=interfaceItem.ipv4Type==="static" ? ""
+                        : "hidden" %>>
+
+                        <!-- IPv4 Address -->
+                        <div class="config-row">
+
+                            <label for="ipv4Address" class="config-label">
+                                IPv4 Address
+                            </label>
+
+                            <div class="config-field">
+
+                                <input type="text" id="ipv4Address" name="ipv4Address" placeholder="192.168.10.1"
+                                    value="<%= interfaceItem.ipv4Address || '' %>">
+
+                                <small>
+                                    Enter the static IPv4 address for this interface.
+                                </small>
+
+                            </div>
+
+                        </div>
+
+                        <!-- Prefix Length -->
+                        <div class="config-row">
+
+                            <label for="ipv4Prefix" class="config-label">
+                                Prefix Length
+                            </label>
+
+                            <div class="config-field">
+
+                                <input type="number" id="ipv4Prefix" name="ipv4Prefix" min="1" max="32" placeholder="24"
+                                    value="<%= interfaceItem.ipv4Prefix ?? '' %>">
+
+                                <small>
+                                    IPv4 network prefix, from 1 to 32.
+                                </small>
+
+                            </div>
+
+                        </div>
+
+                        <!-- IPv4 Gateway -->
+                        <div class="config-row">
+
+                            <label for="ipv4Gateway" class="config-label">
+                                IPv4 UpStream Gateway
+                            </label>
+
+                            <div class="config-field">
+
+                                <input type="text" id="ipv4Gateway" name="ipv4Gateway" placeholder="192.168.10.254"
+                                    value="<%= interfaceItem.ipv4Gateway || '' %>">
+
+                                <small>
+                                    If this interface is an Internet connection, select an existing Gateway from the
+                                    list or add a new one using the "Add" button.
+                                    On local area network interfaces the upstream gateway should be "none".
+                                    Selecting an upstream gateway causes the firewall to treat this interface as a WAN
+                                    type interface.
+                                    Gateways can be managed by clicking here.
+
+                                </small>
+
+                            </div>
+
+                        </div>
+
+                    </div>
+
+                    <!-- MTU -->
                     <div class="config-row">
 
-                        <label for="ipv4Gateway" class="config-label">
-                            IPv4 Gateway
+                        <label for="mtu" class="config-label">
+                            MTU
                         </label>
 
                         <div class="config-field">
 
-                            <input
-                                type="text"
-                                id="ipv4Gateway"
-                                name="ipv4Gateway"
-                                placeholder="192.168.10.254"
-                                value="<%= interfaceItem.ipv4Gateway || '' %>">
+                            <input type="number" id="mtu" name="mtu" min="576" max="9000" placeholder="Auto"
+                                value="<%= interfaceItem.mtu ?? '' %>">
 
                             <small>
-                                Optional gateway address for this interface.
+                                Leave blank to use the adapter's default MTU.
+                                This is typically 1500 bytes.
                             </small>
 
                         </div>
 
                     </div>
 
-                </div>
+                </section>
 
-                <!-- MAC Address -->
+                <!-- Interface Information -->
+                <section class="config-container">
 
-                <div class="config-row">
-
-                    <label for="macAddress" class="config-label">
-                        MAC Address
-                    </label>
-
-                    <div class="config-field">
-
-                        <input
-                            type="text"
-                            id="macAddress"
-                            name="macAddress"
-                            placeholder="xx:xx:xx:xx:xx:xx"
-                            value="<%= interfaceItem.macAddress || '' %>">
-
-                        <small>
-                            Optional MAC address override.
-                            Leave blank to retain the adapter's default address.
-                        </small>
-
+                    <div class="config-header">
+                        Interface Information
                     </div>
 
-                </div>
+                    <!-- Logical Interface ID -->
+                    <div class="config-row">
 
-                <!-- MTU -->
-
-                <div class="config-row">
-
-                    <label for="mtu" class="config-label">
-                        MTU
-                    </label>
-
-                    <div class="config-field">
-
-                        <input
-                            type="number"
-                            id="mtu"
-                            name="mtu"
-                            min="576"
-                            max="9000"
-                            value="<%= interfaceItem.mtu ?? '' %>"
-                            placeholder="1500">
-
-                        <small>
-                            Optional MTU value, between 576 and 9000 bytes.
-                        </small>
-
-                    </div>
-
-                </div>
-
-                <!-- MSS -->
-
-                <div class="config-row">
-
-                    <label for="mss" class="config-label">
-                        MSS
-                    </label>
-
-                    <div class="config-field">
-
-                        <input
-                            type="number"
-                            id="mss"
-                            name="mss"
-                            min="536"
-                            max="8960"
-                            value="<%= interfaceItem.mss ?? '' %>"
-                            placeholder="1460">
-
-                        <small>
-                            Optional TCP MSS value.
-                            Leave blank to use the system default.
-                        </small>
-
-                    </div>
-
-                </div>
-
-                <!-- Speed and Duplex -->
-
-                <div class="config-row">
-
-                    <label for="speedDuplex" class="config-label">
-                        Speed and Duplex
-                    </label>
-
-                    <div class="config-field">
-
-                        <select id="speedDuplex" name="speedDuplex">
-
-                            <option value="auto"
-                                <%= !interfaceItem.speedDuplex || interfaceItem.speedDuplex === "auto" ? "selected" : "" %>>
-                                Auto negotiation
-                            </option>
-
-                            <option value="10-half"
-                                <%= interfaceItem.speedDuplex === "10-half" ? "selected" : "" %>>
-                                10 Mbps Half Duplex
-                            </option>
-
-                            <option value="10-full"
-                                <%= interfaceItem.speedDuplex === "10-full" ? "selected" : "" %>>
-                                10 Mbps Full Duplex
-                            </option>
-
-                            <option value="100-half"
-                                <%= interfaceItem.speedDuplex === "100-half" ? "selected" : "" %>>
-                                100 Mbps Half Duplex
-                            </option>
-
-                            <option value="100-full"
-                                <%= interfaceItem.speedDuplex === "100-full" ? "selected" : "" %>>
-                                100 Mbps Full Duplex
-                            </option>
-
-                            <option value="1000-full"
-                                <%= interfaceItem.speedDuplex === "1000-full" ? "selected" : "" %>>
-                                1000 Mbps Full Duplex
-                            </option>
-
-                        </select>
-
-                        <small>
-                            Preferred link speed and duplex mode.
-                        </small>
-
-                    </div>
-
-                </div>
-
-            </section>
-
-            <!-- Interface Information -->
-
-            <section class="config-container">
-
-                <div class="config-header">
-                    Interface Information
-                </div>
-
-                <div class="config-row">
-
-                    <span class="config-label">
-                        Logical Interface ID
-                    </span>
-
-                    <div class="config-field">
-                        <span class="config-value">
-                            <%= interfaceItem.id %>
+                        <span class="config-label">
+                            Logical Interface ID
                         </span>
+
+                        <div class="config-field">
+
+                            <span class="config-value">
+                                <%= interfaceItem.id %>
+                            </span>
+
+                        </div>
+
                     </div>
 
-                </div>
+                    <!-- Network Port -->
+                    <div class="config-row">
 
-                <div class="config-row">
-
-                    <span class="config-label">
-                        Network Port
-                    </span>
-
-                    <div class="config-field">
-                        <span class="config-value">
-                            <%= interfaceItem.nic || "Not assigned" %>
+                        <span class="config-label">
+                            Network Port
                         </span>
+
+                        <div class="config-field">
+
+                            <span class="config-value">
+                                <%= interfaceItem.nic || "Not assigned" %>
+                            </span>
+
+                        </div>
+
                     </div>
+
+                </section>
+
+                <!-- Notice -->
+                <div class="interface-settings-notice">
+
+                    Saving stores these settings in NetWall's configuration file.
+
+                    It does not change the live Linux network configuration.
 
                 </div>
 
-            </section>
+                <!-- Actions -->
+                <div class="config-actions">
 
-            <!-- Notice -->
+                    <a href="/interfaces" class="config-back-button">
+                        Back
+                    </a>
 
-            <div class="interface-settings-notice">
-                Saving stores these settings in NetWall's configuration file.
-                It does not yet change the live Linux network configuration.
-            </div>
+                    <button type="submit" class="config-save-button">
+                        Save
+                    </button>
 
-            <!-- Actions -->
+                </div>
 
-            <div class="config-actions">
+                <!-- Status -->
+                <p id="interface-settings-status" class="interface-settings-status" role="status" aria-live="polite">
+                </p>
 
-                <a href="/interfaces" class="config-back-button">
-                    Back
-                </a>
+            </form>
 
-                <button
-                    type="submit"
-                    class="config-save-button">
-                    Save
-                </button>
+        </main>
 
-            </div>
-
-            <p
-                id="interface-settings-status"
-                class="interface-settings-status"
-                role="status"
-                aria-live="polite">
-            </p>
-
-        </form>
-
-    </main>
-
-    <script src="/js/interface-settings.js" defer></script>
+        <script src="/js/interface-settings.js" defer></script>
 
 </body>
+
 </html>

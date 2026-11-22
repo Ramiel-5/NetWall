@@ -16,15 +16,15 @@ router.get("/", (req, res) => {
     });
 });
 
-// Get available NICs
-router.get("/ports", (req, res) => {
+// Get available network ports
+router.get("/ports", (req, res, next) => {
     try {
         const interfaces = getInterfaces();
+
         res.json({ interfaces });
-    } catch (err) {
-        res.status(500).json({
-            error: err.message
-        });
+
+    } catch (error) {
+        next(error);
     }
 });
 
@@ -36,8 +36,9 @@ router.get("/assignments", async (req, res, next) => {
         res.json({
             assignments: data.interfaces
         });
-    } catch (err) {
-        next(err);
+
+    } catch (error) {
+        next(error);
     }
 });
 
@@ -54,17 +55,13 @@ router.put("/assignments", async (req, res, next) => {
 
         const availableNics = Object.keys(getInterfaces());
 
-        if (assignments.length > availableNics.length) {
-            return res.status(400).json({
-                error: "Maximum number of logical interfaces reached"
-            });
-        }
-
-        // Preserve settings when saving assignments.
         const previousConfig = await readAssignments();
 
         const previousById = new Map(
-            previousConfig.interfaces.map(item => [item.id, item])
+            previousConfig.interfaces.map(item => [
+                item.id,
+                item
+            ])
         );
 
         const normalized = [];
@@ -85,15 +82,30 @@ router.put("/assignments", async (req, res, next) => {
             const name = item.name.trim();
             const nic = item.nic.trim();
 
+            // Validate interface ID
             if (!/^(WAN|LAN|OPT[1-9]\d*)$/.test(id)) {
                 return res.status(400).json({
                     error: `Invalid interface ID: ${id}`
                 });
             }
 
+            // Validate name
             if (!name) {
                 return res.status(400).json({
                     error: "Interface name cannot be empty"
+                });
+            }
+
+            if (name.length > 40) {
+                return res.status(400).json({
+                    error: "Interface name cannot exceed 40 characters"
+                });
+            }
+
+            // Validate NIC
+            if (nic && !availableNics.includes(nic)) {
+                return res.status(400).json({
+                    error: `NIC ${nic} is unavailable`
                 });
             }
 
@@ -107,6 +119,7 @@ router.put("/assignments", async (req, res, next) => {
             });
         }
 
+        // Check duplicate IDs
         const ids = normalized.map(item => item.id);
 
         if (new Set(ids).size !== ids.length) {
@@ -115,12 +128,7 @@ router.put("/assignments", async (req, res, next) => {
             });
         }
 
-        if (!ids.includes("WAN")) {
-            return res.status(400).json({
-                error: "WAN interface cannot be deleted"
-            });
-        }
-
+        // Check duplicate names
         const names = normalized.map(
             item => item.name.toLowerCase()
         );
@@ -131,17 +139,10 @@ router.put("/assignments", async (req, res, next) => {
             });
         }
 
+        // Check duplicate NIC assignments
         const selectedNics = normalized
             .map(item => item.nic)
-            .filter(nic => nic !== "");
-
-        for (const nic of selectedNics) {
-            if (!availableNics.includes(nic)) {
-                return res.status(400).json({
-                    error: `NIC ${nic} is unavailable`
-                });
-            }
-        }
+            .filter(Boolean);
 
         if (new Set(selectedNics).size !== selectedNics.length) {
             return res.status(400).json({
@@ -152,11 +153,12 @@ router.put("/assignments", async (req, res, next) => {
         await saveAssignments(normalized);
 
         res.json({
-            message: "Assignments saved successfully"
+            success: true,
+            message: "Assignments saved successfully."
         });
 
-    } catch (err) {
-        next(err);
+    } catch (error) {
+        next(error);
     }
 });
 
@@ -178,8 +180,8 @@ router.get("/settings/:id", async (req, res, next) => {
             interfaceItem
         });
 
-    } catch (err) {
-        next(err);
+    } catch (error) {
+        next(error);
     }
 });
 
@@ -200,52 +202,35 @@ router.put("/settings/:id", async (req, res, next) => {
 
         const body = req.body || {};
 
-        const allowedIpv4Types = [
-            "none",
-            "dhcp",
-            "static"
-        ];
-
-        const allowedSpeedDuplex = [
-            "auto",
-            "10-half",
-            "10-full",
-            "100-half",
-            "100-full",
-            "1000-full"
-        ];
-
         const name = typeof body.name === "string"
             ? body.name.trim()
             : "";
 
         const ipv4Type = body.ipv4Type;
 
-        const macAddress = typeof body.macAddress === "string"
-            ? body.macAddress.trim().toLowerCase()
-            : "";
-
-        const mtu = body.mtu === "" || body.mtu == null
-            ? null
-            : Number(body.mtu);
-
-        const mss = body.mss === "" || body.mss == null
-            ? null
-            : Number(body.mss);
-
         const ipv4Address = typeof body.ipv4Address === "string"
             ? body.ipv4Address.trim()
             : "";
-
-        const ipv4Prefix = body.ipv4Prefix === "" || body.ipv4Prefix == null
-            ? null
-            : Number(body.ipv4Prefix);
 
         const ipv4Gateway = typeof body.ipv4Gateway === "string"
             ? body.ipv4Gateway.trim()
             : "";
 
-        const speedDuplex = body.speedDuplex || "auto";
+        const ipv4Prefix = body.ipv4Prefix === "" ||
+            body.ipv4Prefix == null
+            ? null
+            : Number(body.ipv4Prefix);
+
+        const mtu = body.mtu === "" || body.mtu == null
+            ? null
+            : Number(body.mtu);
+
+        // Validate enabled
+        if (typeof body.enabled !== "boolean") {
+            return res.status(400).json({
+                error: "Invalid interface enabled value"
+            });
+        }
 
         // Validate description
         if (!name) {
@@ -260,6 +245,7 @@ router.put("/settings/:id", async (req, res, next) => {
             });
         }
 
+        // Check duplicate descriptions
         const duplicateName = data.interfaces.some(item =>
             item.id !== interfaceItem.id &&
             item.name.toLowerCase() === name.toLowerCase()
@@ -267,24 +253,16 @@ router.put("/settings/:id", async (req, res, next) => {
 
         if (duplicateName) {
             return res.status(400).json({
-                error: "Interface description already exists"
+                error: "This description is already used"
             });
         }
 
-        // Validate IPv4 configuration
+        // Validate IPv4 type
+        const allowedIpv4Types = ["none", "dhcp", "static"];
+
         if (!allowedIpv4Types.includes(ipv4Type)) {
             return res.status(400).json({
                 error: "Invalid IPv4 configuration type"
-            });
-        }
-
-        // Validate MAC address
-        if (
-            macAddress &&
-            !/^([0-9a-f]{2}:){5}[0-9a-f]{2}$/.test(macAddress)
-        ) {
-            return res.status(400).json({
-                error: "Invalid MAC address format"
             });
         }
 
@@ -294,24 +272,7 @@ router.put("/settings/:id", async (req, res, next) => {
             (!Number.isInteger(mtu) || mtu < 576 || mtu > 9000)
         ) {
             return res.status(400).json({
-                error: "MTU must be an integer between 576 and 9000"
-            });
-        }
-
-        // Validate MSS
-        if (
-            mss !== null &&
-            (!Number.isInteger(mss) || mss < 536 || mss > 8960)
-        ) {
-            return res.status(400).json({
-                error: "MSS must be an integer between 536 and 8960"
-            });
-        }
-
-        // Validate speed and duplex
-        if (!allowedSpeedDuplex.includes(speedDuplex)) {
-            return res.status(400).json({
-                error: "Invalid speed and duplex mode"
+                error: "MTU must be between 576 and 9000"
             });
         }
 
@@ -319,7 +280,7 @@ router.put("/settings/:id", async (req, res, next) => {
         if (ipv4Type === "static") {
             if (!net.isIPv4(ipv4Address)) {
                 return res.status(400).json({
-                    error: "A valid static IPv4 address is required"
+                    error: "Invalid IPv4 address"
                 });
             }
 
@@ -341,10 +302,8 @@ router.put("/settings/:id", async (req, res, next) => {
         }
 
         // Update interface settings
+        interfaceItem.enabled = body.enabled;
         interfaceItem.name = name;
-
-        interfaceItem.enabled = body.enabled === true;
-
         interfaceItem.ipv4Type = ipv4Type;
 
         interfaceItem.ipv4Address =
@@ -356,13 +315,7 @@ router.put("/settings/:id", async (req, res, next) => {
         interfaceItem.ipv4Gateway =
             ipv4Type === "static" ? ipv4Gateway : "";
 
-        interfaceItem.macAddress = macAddress;
-
         interfaceItem.mtu = mtu;
-
-        interfaceItem.mss = mss;
-
-        interfaceItem.speedDuplex = speedDuplex;
 
         await saveAssignments(data.interfaces);
 
@@ -372,8 +325,8 @@ router.put("/settings/:id", async (req, res, next) => {
             interface: interfaceItem
         });
 
-    } catch (err) {
-        next(err);
+    } catch (error) {
+        next(error);
     }
 });
 

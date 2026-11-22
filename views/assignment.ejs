@@ -1,4 +1,3 @@
-```ejs
 <!DOCTYPE html>
 <html lang="en">
 
@@ -13,62 +12,76 @@
 
 <body>
 
-    <%- include('partials/sidebar') %>
+    <%- include('partials/sidebar', { activePage: 'interfaces' }) %>
 
     <main class="content assignment-page">
 
-        <header class="breadcrumb">
-            <span>Interfaces</span> / Interface Assignments
+        <div class="breadcrumb">
+            <span>Interfaces</span>
+            <span>/</span>
+            <span>Interface Assignments</span>
+        </div>
+
+        <header class="page-header">
+            <h1>Interface Assignments</h1>
+
+            <p>
+                Assign physical network ports to logical interfaces.
+            </p>
         </header>
 
-        <h1>Interface Assignments</h1>
+        <section class="content-section">
 
-        <div class="assignment-table-container">
+            <div class="section-header">
+                <h2>Network Interfaces</h2>
+            </div>
 
-            <table class="assignment-table">
+            <div class="table-container">
 
-                <thead>
-                    <tr>
-                        <th>Interfaces (logical)</th>
-                        <th>Network port</th>
-                        <th>Actions</th>
-                    </tr>
-                </thead>
+                <table class="assignment-table">
 
-                <tbody id="assignment-rows">
-                    <tr>
-                        <td colspan="3">Loading interfaces...</td>
-                    </tr>
-                </tbody>
+                    <thead>
+                        <tr>
+                            <th>Interface</th>
+                            <th>Description</th>
+                            <th>Network Port</th>
+                            <th>Action</th>
+                        </tr>
+                    </thead>
 
-            </table>
+                    <tbody id="assignment-rows">
+                    </tbody>
 
-        </div>
+                </table>
 
-        <div class="assignment-bottom-actions">
+            </div>
 
-            <button
-                id="add-button"
-                class="assignment-add-button"
-                type="button">
-                + Add
-            </button>
+            <div class="assignment-actions">
 
-            <button
-                id="save-button"
-                class="assignment-save-button"
-                type="button">
-                Save
-            </button>
+                <button
+                    type="button"
+                    id="add-button"
+                    class="secondary-button">
+                    Add Interface
+                </button>
 
-        </div>
+                <button
+                    type="button"
+                    id="save-button"
+                    class="primary-button">
+                    Save
+                </button>
 
-        <p id="status" role="status" aria-live="polite"></p>
+            </div>
+
+            <p id="status" class="status"></p>
+
+        </section>
 
     </main>
 
-    <script src="/js/assignment.js" defer></script>
+    <script src="/js/assignment.js"></script>
 
 </body>
+
 </html>
-```

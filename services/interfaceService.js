@@ -1,10 +1,8 @@
-
 const os = require("os");
 const path = require("path");
 const fs = require("fs");
 
 const CONFIG_DIR = path.join(__dirname, "..", "data");
-
 const CONFIG_FILE = path.join(CONFIG_DIR, "interfaces.json");
 
 // Get available network interfaces, excluding loopback
@@ -22,24 +20,34 @@ function getInterfaces() {
     );
 }
 
-// Default logical interfaces
 function createDefaultAssignments() {
     return {
         interfaces: [
             {
                 id: "WAN",
                 name: "WAN",
-                nic: ""
+                nic: "",
+                enabled: true,
+                ipv4Type: "dhcp",
+                address: "",
+                prefix: "",
+                gateway: "",
+                mtu: 1500
             },
             {
                 id: "LAN",
                 name: "LAN",
-                nic: ""
+                nic: "",
+                enabled:true,
+                ipv4Type: "static",
+                address: "192.168.10.10",
+                prefix: "24",
+                gateway: "",
+                mtu: 1500
             }
         ]
     };
 }
-
 // Read interface assignments
 async function readAssignments() {
     try {
@@ -76,18 +84,26 @@ async function saveAssignments(assignments) {
     }
 
     await fs.promises.mkdir(CONFIG_DIR, {
-        recursive: true
+        recursive: true,
+        mode: 0o700
     });
 
     const config = {
         interfaces: assignments
     };
 
+    const tempFile = `${CONFIG_FILE}.tmp`;
+
     await fs.promises.writeFile(
-        CONFIG_FILE,
+        tempFile,
         JSON.stringify(config, null, 2),
-        "utf8"
+        {
+            encoding: "utf8",
+            mode: 0o600
+        }
     );
+
+    await fs.promises.rename(tempFile, CONFIG_FILE);
 }
 
 module.exports = {
